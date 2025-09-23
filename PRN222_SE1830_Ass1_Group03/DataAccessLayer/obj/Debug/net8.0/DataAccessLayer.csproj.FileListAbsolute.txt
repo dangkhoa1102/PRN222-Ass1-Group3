@@ -1,0 +1,15 @@
+D:\Hoc tap\PRN222\PRN222-Ass1-Group3\PRN222_SE1830_Ass1_Group03\DataAccessLayer\bin\Debug\net8.0\DataAccessLayer.deps.json
+D:\Hoc tap\PRN222\PRN222-Ass1-Group3\PRN222_SE1830_Ass1_Group03\DataAccessLayer\bin\Debug\net8.0\DataAccessLayer.runtimeconfig.json
+D:\Hoc tap\PRN222\PRN222-Ass1-Group3\PRN222_SE1830_Ass1_Group03\DataAccessLayer\bin\Debug\net8.0\DataAccessLayer.dll
+D:\Hoc tap\PRN222\PRN222-Ass1-Group3\PRN222_SE1830_Ass1_Group03\DataAccessLayer\bin\Debug\net8.0\DataAccessLayer.pdb
+D:\Hoc tap\PRN222\PRN222-Ass1-Group3\PRN222_SE1830_Ass1_Group03\DataAccessLayer\obj\Debug\net8.0\DataAccessLayer.csproj.AssemblyReference.cache
+D:\Hoc tap\PRN222\PRN222-Ass1-Group3\PRN222_SE1830_Ass1_Group03\DataAccessLayer\obj\Debug\net8.0\DataAccessLayer.GeneratedMSBuildEditorConfig.editorconfig
+D:\Hoc tap\PRN222\PRN222-Ass1-Group3\PRN222_SE1830_Ass1_Group03\DataAccessLayer\obj\Debug\net8.0\DataAccessLayer.AssemblyInfoInputs.cache
+D:\Hoc tap\PRN222\PRN222-Ass1-Group3\PRN222_SE1830_Ass1_Group03\DataAccessLayer\obj\Debug\net8.0\DataAccessLayer.AssemblyInfo.cs
+D:\Hoc tap\PRN222\PRN222-Ass1-Group3\PRN222_SE1830_Ass1_Group03\DataAccessLayer\obj\Debug\net8.0\DataAccessLayer.csproj.CoreCompileInputs.cache
+D:\Hoc tap\PRN222\PRN222-Ass1-Group3\PRN222_SE1830_Ass1_Group03\DataAccessLayer\obj\Debug\net8.0\DataAccessLayer.sourcelink.json
+D:\Hoc tap\PRN222\PRN222-Ass1-Group3\PRN222_SE1830_Ass1_Group03\DataAccessLayer\obj\Debug\net8.0\DataAccessLayer.dll
+D:\Hoc tap\PRN222\PRN222-Ass1-Group3\PRN222_SE1830_Ass1_Group03\DataAccessLayer\obj\Debug\net8.0\refint\DataAccessLayer.dll
+D:\Hoc tap\PRN222\PRN222-Ass1-Group3\PRN222_SE1830_Ass1_Group03\DataAccessLayer\obj\Debug\net8.0\DataAccessLayer.pdb
+D:\Hoc tap\PRN222\PRN222-Ass1-Group3\PRN222_SE1830_Ass1_Group03\DataAccessLayer\obj\Debug\net8.0\DataAccessLayer.genruntimeconfig.cache
+D:\Hoc tap\PRN222\PRN222-Ass1-Group3\PRN222_SE1830_Ass1_Group03\DataAccessLayer\obj\Debug\net8.0\ref\DataAccessLayer.dll
