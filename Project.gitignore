@@ -1,0 +1,115 @@
+##############################
+# Build artifacts
+##############################
+bin/
+obj/
+[Bb]uild/
+[Ll]ogs/
+[Ll]og/
+out/
+artifacts/
+
+# Visual Studio cache/options
+.vs/
+.vscode/
+*.user
+*.userosscache
+*.suo
+*.cache
+*.pdb
+*.opendb
+*.sln.docstates
+*.dbmdl
+
+# Dotnet & NuGet
+*.nuget.props
+*.nuget.targets
+*.nuget.g.props
+*.nuget.g.targets
+*.nuget.dgspec.json
+*.nuget.pkgmetadata
+*.nuget.targets
+*.snupkg
+*.nupkg
+.nuget/
+packages/
+project.lock.json
+project.fragment.lock.json
+PackageRestoreConsent.txt
+
+# Resharper / Rider / JetBrains
+_ReSharper*/
+*.DotSettings.user
+.idea/
+*.sln.iml
+
+# WPF specific
+*.g.*
+*.g.i.*
+*.baml
+*.xaml.cs
+*.xaml.g.*
+*.xaml.g.i.*
+*.xaml.resources
+*.xaml.binary
+*.exe
+*.appx
+*.appxupload
+*.appxbundle
+*.pri
+*.psess
+*.vsp
+*.vspx
+
+# Publish output
+publish/
+*.publish.xml
+*.pubxml
+*.pubxml.user
+*.wixproj*
+*.msixupload
+*.msixbundle
+*.msix
+*.msi
+
+# Temp & Backup
+*.tmp
+*.bak
+*.swp
+*.orig
+*.old
+*.temp
+*.log
+
+# OS generated files
+.DS_Store
+Thumbs.db
+ehthumbs.db
+desktop.ini
+$RECYCLE.BIN/
+
+# Rider / JetBrains
+.idea/
+*.sln.iml
+
+# Test results
+[Tt]est[Rr]esult*/
+*.TestResults.xml
+*.trx
+*.coverage
+*.coveragexml
+
+# Others
+*.vspscc
+*_i.c
+*_p.c
+*_h.h
+*.db
+*.cachefile
+*.sqlite
+*.mdf
+*.ldf
+
+# Local environment configs
+appsettings.Development.json
+appsettings.Local.json
