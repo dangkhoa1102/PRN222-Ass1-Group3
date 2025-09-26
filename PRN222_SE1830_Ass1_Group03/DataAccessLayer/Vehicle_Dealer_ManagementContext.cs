@@ -2,9 +2,8 @@
 #nullable disable
 using System;
 using System.Collections.Generic;
+using BusinessObjects.Models;
 using Microsoft.EntityFrameworkCore;
-using BusinessObjects.Models; 
-
 
 namespace DataAccessLayer;
 
@@ -19,11 +18,11 @@ public partial class Vehicle_Dealer_ManagementContext : DbContext
     {
     }
 
-    public virtual DbSet<Customer> Customers { get; set; }
+    public virtual DbSet<Dealer> Dealers { get; set; }
 
-    public virtual DbSet<Employee> Employees { get; set; }
+    public virtual DbSet<Order> Orders { get; set; }
 
-    public virtual DbSet<Quotation> Quotations { get; set; }
+    public virtual DbSet<OrderHistory> OrderHistories { get; set; }
 
     public virtual DbSet<User> Users { get; set; }
 
@@ -35,55 +34,47 @@ public partial class Vehicle_Dealer_ManagementContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.Entity<Customer>(entity =>
+        modelBuilder.Entity<Dealer>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK__customer__3213E83F9432D964");
+            entity.HasKey(e => e.Id).HasName("PK__dealers__3213E83F84155847");
 
-            entity.ToTable("customers");
+            entity.ToTable("dealers");
 
-            entity.HasIndex(e => e.UserId, "UQ__customer__B9BE370E8FBA725E").IsUnique();
+            entity.HasIndex(e => e.Code, "UQ__dealers__357D4CF93A9FC2AB").IsUnique();
 
             entity.Property(e => e.Id)
                 .HasDefaultValueSql("(newid())")
                 .HasColumnName("id");
-            entity.Property(e => e.Address)
-                .HasMaxLength(200)
-                .HasColumnName("address");
-            entity.Property(e => e.AssignedTo).HasColumnName("assigned_to");
-            entity.Property(e => e.CompanyName)
+            entity.Property(e => e.Address).HasColumnName("address");
+            entity.Property(e => e.Code)
+                .IsRequired()
+                .HasMaxLength(20)
+                .HasColumnName("code");
+            entity.Property(e => e.CreatedAt)
+                .HasDefaultValueSql("(getdate())")
+                .HasColumnName("created_at");
+            entity.Property(e => e.Email)
                 .HasMaxLength(100)
-                .HasColumnName("company_name");
-            entity.Property(e => e.CreatedAt)
-                .HasDefaultValueSql("(getdate())")
-                .HasColumnName("created_at");
-            entity.Property(e => e.CustomerType)
+                .HasColumnName("email");
+            entity.Property(e => e.IsActive)
+                .HasDefaultValue(true)
+                .HasColumnName("is_active");
+            entity.Property(e => e.Name)
+                .IsRequired()
+                .HasMaxLength(100)
+                .HasColumnName("name");
+            entity.Property(e => e.Phone)
                 .HasMaxLength(20)
-                .HasDefaultValue("individual")
-                .HasColumnName("customer_type");
-            entity.Property(e => e.DateOfBirth).HasColumnName("date_of_birth");
-            entity.Property(e => e.TaxCode)
-                .HasMaxLength(20)
-                .HasColumnName("tax_code");
-            entity.Property(e => e.UserId).HasColumnName("user_id");
-
-            entity.HasOne(d => d.AssignedToNavigation).WithMany(p => p.Customers)
-                .HasForeignKey(d => d.AssignedTo)
-                .HasConstraintName("FK__customers__assig__4CA06362");
-
-            entity.HasOne(d => d.User).WithOne(p => p.Customer)
-                .HasForeignKey<Customer>(d => d.UserId)
-                .HasConstraintName("FK__customers__user___4BAC3F29");
+                .HasColumnName("phone");
         });
 
-        modelBuilder.Entity<Employee>(entity =>
+        modelBuilder.Entity<Order>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK__employee__3213E83F18D1B5DD");
+            entity.HasKey(e => e.Id).HasName("PK__orders__3213E83F5DE55A2F");
 
-            entity.ToTable("employees");
+            entity.ToTable("orders");
 
-            entity.HasIndex(e => e.EmployeeCode, "UQ__employee__B0AA7345E813AA0A").IsUnique();
-
-            entity.HasIndex(e => e.UserId, "UQ__employee__B9BE370E0494926D").IsUnique();
+            entity.HasIndex(e => e.OrderNumber, "UQ__orders__730E34DF2F5891B6").IsUnique();
 
             entity.Property(e => e.Id)
                 .HasDefaultValueSql("(newid())")
@@ -91,35 +82,49 @@ public partial class Vehicle_Dealer_ManagementContext : DbContext
             entity.Property(e => e.CreatedAt)
                 .HasDefaultValueSql("(getdate())")
                 .HasColumnName("created_at");
-            entity.Property(e => e.Department)
-                .HasMaxLength(50)
-                .HasColumnName("department");
-            entity.Property(e => e.EmployeeCode)
-                .IsRequired()
+            entity.Property(e => e.CustomerId).HasColumnName("customer_id");
+            entity.Property(e => e.DealerId).HasColumnName("dealer_id");
+            entity.Property(e => e.Notes).HasColumnName("notes");
+            entity.Property(e => e.OrderNumber)
+                .HasMaxLength(30)
+                .HasColumnName("order_number");
+            entity.Property(e => e.PaymentStatus)
                 .HasMaxLength(20)
-                .HasColumnName("employee_code");
-            entity.Property(e => e.HireDate).HasColumnName("hire_date");
-            entity.Property(e => e.Position)
-                .IsRequired()
-                .HasMaxLength(50)
-                .HasColumnName("position");
-            entity.Property(e => e.Salary)
-                .HasColumnType("decimal(12, 0)")
-                .HasColumnName("salary");
-            entity.Property(e => e.UserId).HasColumnName("user_id");
+                .HasDefaultValue("unpaid")
+                .HasColumnName("payment_status");
+            entity.Property(e => e.Status)
+                .HasMaxLength(20)
+                .HasDefaultValue("pending")
+                .HasColumnName("status");
+            entity.Property(e => e.TotalAmount)
+                .HasColumnType("decimal(15, 2)")
+                .HasColumnName("total_amount");
+            entity.Property(e => e.UpdatedAt)
+                .HasDefaultValueSql("(getdate())")
+                .HasColumnName("updated_at");
+            entity.Property(e => e.VehicleId).HasColumnName("vehicle_id");
 
-            entity.HasOne(d => d.User).WithOne(p => p.Employee)
-                .HasForeignKey<Employee>(d => d.UserId)
-                .HasConstraintName("FK__employees__user___440B1D61");
+            entity.HasOne(d => d.Customer).WithMany(p => p.Orders)
+                .HasForeignKey(d => d.CustomerId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_orders_customers");
+
+            entity.HasOne(d => d.Dealer).WithMany(p => p.Orders)
+                .HasForeignKey(d => d.DealerId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_orders_dealers");
+
+            entity.HasOne(d => d.Vehicle).WithMany(p => p.Orders)
+                .HasForeignKey(d => d.VehicleId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_orders_vehicles");
         });
 
-        modelBuilder.Entity<Quotation>(entity =>
+        modelBuilder.Entity<OrderHistory>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK__quotatio__3213E83F8AE5E4BA");
+            entity.HasKey(e => e.Id).HasName("PK__order_hi__3213E83FD30F0CB8");
 
-            entity.ToTable("quotations");
-
-            entity.HasIndex(e => e.QuotationCode, "UQ__quotatio__C5E248D6FC59639C").IsUnique();
+            entity.ToTable("order_history");
 
             entity.Property(e => e.Id)
                 .HasDefaultValueSql("(newid())")
@@ -128,51 +133,33 @@ public partial class Vehicle_Dealer_ManagementContext : DbContext
                 .HasDefaultValueSql("(getdate())")
                 .HasColumnName("created_at");
             entity.Property(e => e.CreatedBy).HasColumnName("created_by");
-            entity.Property(e => e.CustomerId).HasColumnName("customer_id");
-            entity.Property(e => e.Quantity)
-                .HasDefaultValue(1)
-                .HasColumnName("quantity");
-            entity.Property(e => e.QuotationCode)
-                .IsRequired()
-                .HasMaxLength(20)
-                .HasColumnName("quotation_code");
+            entity.Property(e => e.Notes).HasColumnName("notes");
+            entity.Property(e => e.OrderId).HasColumnName("order_id");
             entity.Property(e => e.Status)
-                .HasMaxLength(20)
-                .HasDefaultValue("draft")
+                .IsRequired()
+                .HasMaxLength(50)
                 .HasColumnName("status");
-            entity.Property(e => e.TotalPrice)
-                .HasColumnType("decimal(12, 0)")
-                .HasColumnName("total_price");
-            entity.Property(e => e.UnitPrice)
-                .HasColumnType("decimal(12, 0)")
-                .HasColumnName("unit_price");
-            entity.Property(e => e.VehicleId).HasColumnName("vehicle_id");
 
-            entity.HasOne(d => d.CreatedByNavigation).WithMany(p => p.Quotations)
+            entity.HasOne(d => d.CreatedByNavigation).WithMany(p => p.OrderHistories)
                 .HasForeignKey(d => d.CreatedBy)
                 .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__quotation__creat__5DCAEF64");
+                .HasConstraintName("FK_order_history_users");
 
-            entity.HasOne(d => d.Customer).WithMany(p => p.Quotations)
-                .HasForeignKey(d => d.CustomerId)
+            entity.HasOne(d => d.Order).WithMany(p => p.OrderHistories)
+                .HasForeignKey(d => d.OrderId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__quotation__custo__5BE2A6F2");
-
-            entity.HasOne(d => d.Vehicle).WithMany(p => p.Quotations)
-                .HasForeignKey(d => d.VehicleId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__quotation__vehic__5CD6CB2B");
+                .HasConstraintName("FK_order_history_orders");
         });
 
         modelBuilder.Entity<User>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK__users__3213E83F016C9F73");
+            entity.HasKey(e => e.Id).HasName("PK__users__3213E83FFCDE4AB4");
 
             entity.ToTable("users");
 
-            entity.HasIndex(e => e.Phone, "UQ__users__B43B145F682A3724").IsUnique();
+            entity.HasIndex(e => e.Email, "UQ__users__AB6E6164C792909D").IsUnique();
 
-            entity.HasIndex(e => e.Username, "UQ__users__F3DBC5724E37F909").IsUnique();
+            entity.HasIndex(e => e.Username, "UQ__users__F3DBC57200B7492E").IsUnique();
 
             entity.Property(e => e.Id)
                 .HasDefaultValueSql("(newid())")
@@ -180,38 +167,41 @@ public partial class Vehicle_Dealer_ManagementContext : DbContext
             entity.Property(e => e.CreatedAt)
                 .HasDefaultValueSql("(getdate())")
                 .HasColumnName("created_at");
+            entity.Property(e => e.DealerId).HasColumnName("dealer_id");
             entity.Property(e => e.Email)
+                .IsRequired()
                 .HasMaxLength(100)
                 .HasColumnName("email");
             entity.Property(e => e.FullName)
-                .IsRequired()
                 .HasMaxLength(100)
                 .HasColumnName("full_name");
+            entity.Property(e => e.IsActive)
+                .HasDefaultValue(true)
+                .HasColumnName("is_active");
             entity.Property(e => e.Password)
                 .IsRequired()
                 .HasMaxLength(255)
                 .HasColumnName("password");
             entity.Property(e => e.Phone)
-                .IsRequired()
-                .HasMaxLength(15)
+                .HasMaxLength(20)
                 .HasColumnName("phone");
             entity.Property(e => e.Role)
                 .IsRequired()
                 .HasMaxLength(20)
                 .HasColumnName("role");
-            entity.Property(e => e.Status)
-                .HasMaxLength(20)
-                .HasDefaultValue("active")
-                .HasColumnName("status");
             entity.Property(e => e.Username)
                 .IsRequired()
                 .HasMaxLength(50)
                 .HasColumnName("username");
+
+            entity.HasOne(d => d.Dealer).WithMany(p => p.Users)
+                .HasForeignKey(d => d.DealerId)
+                .HasConstraintName("FK_users_dealers");
         });
 
         modelBuilder.Entity<Vehicle>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK__vehicles__3213E83F2FA72BF0");
+            entity.HasKey(e => e.Id).HasName("PK__vehicles__3213E83FC8BE50EE");
 
             entity.ToTable("vehicles");
 
@@ -219,32 +209,31 @@ public partial class Vehicle_Dealer_ManagementContext : DbContext
                 .HasDefaultValueSql("(newid())")
                 .HasColumnName("id");
             entity.Property(e => e.Brand)
-                .IsRequired()
                 .HasMaxLength(50)
                 .HasColumnName("brand");
-            entity.Property(e => e.Color)
-                .HasMaxLength(30)
-                .HasColumnName("color");
             entity.Property(e => e.CreatedAt)
                 .HasDefaultValueSql("(getdate())")
                 .HasColumnName("created_at");
-            entity.Property(e => e.CreatedBy).HasColumnName("created_by");
+            entity.Property(e => e.Description).HasColumnName("description");
+            entity.Property(e => e.Images).HasColumnName("images");
+            entity.Property(e => e.IsActive)
+                .HasDefaultValue(true)
+                .HasColumnName("is_active");
             entity.Property(e => e.Model)
+                .HasMaxLength(50)
+                .HasColumnName("model");
+            entity.Property(e => e.Name)
                 .IsRequired()
                 .HasMaxLength(100)
-                .HasColumnName("model");
+                .HasColumnName("name");
             entity.Property(e => e.Price)
-                .HasColumnType("decimal(12, 0)")
+                .HasColumnType("decimal(15, 2)")
                 .HasColumnName("price");
-            entity.Property(e => e.Status)
-                .HasMaxLength(20)
-                .HasDefaultValue("available")
-                .HasColumnName("status");
+            entity.Property(e => e.Specifications).HasColumnName("specifications");
+            entity.Property(e => e.StockQuantity)
+                .HasDefaultValue(0)
+                .HasColumnName("stock_quantity");
             entity.Property(e => e.Year).HasColumnName("year");
-
-            entity.HasOne(d => d.CreatedByNavigation).WithMany(p => p.Vehicles)
-                .HasForeignKey(d => d.CreatedBy)
-                .HasConstraintName("FK__vehicles__create__534D60F1");
         });
 
         OnModelCreatingPartial(modelBuilder);

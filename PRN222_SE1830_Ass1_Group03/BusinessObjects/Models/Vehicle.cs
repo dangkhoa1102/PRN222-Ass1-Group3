@@ -9,23 +9,27 @@ public partial class Vehicle
 {
     public Guid Id { get; set; }
 
+    public string Name { get; set; }
+
     public string Brand { get; set; }
 
     public string Model { get; set; }
 
-    public int Year { get; set; }
+    public int? Year { get; set; }
 
     public decimal Price { get; set; }
 
-    public string Color { get; set; }
+    public string Description { get; set; }
 
-    public string Status { get; set; }
+    public string Specifications { get; set; }
 
-    public Guid? CreatedBy { get; set; }
+    public string Images { get; set; }
+
+    public int? StockQuantity { get; set; }
 
     public DateTime? CreatedAt { get; set; }
 
-    public virtual Employee CreatedByNavigation { get; set; }
+    public bool? IsActive { get; set; }
 
-    public virtual ICollection<Quotation> Quotations { get; set; } = new List<Quotation>();
+    public virtual ICollection<Order> Orders { get; set; } = new List<Order>();
 }

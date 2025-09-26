@@ -5,31 +5,25 @@ using System.Collections.Generic;
 
 namespace BusinessObjects.Models;
 
-public partial class User
+public partial class Dealer
 {
     public Guid Id { get; set; }
 
-    public string Username { get; set; }
+    public string Name { get; set; }
 
-    public string Email { get; set; }
+    public string Code { get; set; }
 
-    public string Password { get; set; }
-
-    public string FullName { get; set; }
+    public string Address { get; set; }
 
     public string Phone { get; set; }
 
-    public string Role { get; set; }
-
-    public Guid? DealerId { get; set; }
+    public string Email { get; set; }
 
     public DateTime? CreatedAt { get; set; }
 
     public bool? IsActive { get; set; }
 
-    public virtual Dealer Dealer { get; set; }
-
-    public virtual ICollection<OrderHistory> OrderHistories { get; set; } = new List<OrderHistory>();
-
     public virtual ICollection<Order> Orders { get; set; } = new List<Order>();
+
+    public virtual ICollection<User> Users { get; set; } = new List<User>();
 }

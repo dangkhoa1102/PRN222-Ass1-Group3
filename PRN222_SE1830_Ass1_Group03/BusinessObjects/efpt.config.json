@@ -15,15 +15,15 @@
    "T4TemplatePath": null,
    "Tables": [
       {
-         "Name": "[dbo].[customers]",
+         "Name": "[dbo].[dealers]",
          "ObjectType": 0
       },
       {
-         "Name": "[dbo].[employees]",
+         "Name": "[dbo].[order_history]",
          "ObjectType": 0
       },
       {
-         "Name": "[dbo].[quotations]",
+         "Name": "[dbo].[orders]",
          "ObjectType": 0
       },
       {
