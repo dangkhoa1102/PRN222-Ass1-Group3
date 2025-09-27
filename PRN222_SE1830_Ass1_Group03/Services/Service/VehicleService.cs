@@ -60,7 +60,7 @@ namespace Services.Service
             }
             catch (Exception ex)
             {
-                throw new NotImplementedException("VehicleService ERROR: " + ex.Message);
+                throw new Exception("VehicleService ERROR: " + ex.Message, ex);
             }
         }
 
@@ -76,7 +76,7 @@ namespace Services.Service
             }
             catch (Exception ex)
             {
-                throw new NotImplementedException("VehicleService ERROR: " + ex.Message);
+                throw new Exception("VehicleService ERROR: " + ex.Message, ex);
             }
         }
 
@@ -84,14 +84,11 @@ namespace Services.Service
         {
             try
             {
-                var x = await _vehicleRepo.GetAll();
-                if (x == null)
-                    throw new KeyNotFoundException("Product not found");
-                return x;
+                return await _vehicleRepo.GetAll();
             }
             catch (Exception ex)
             {
-                throw new NotImplementedException("VehicleService ERROR: " + ex.Message);
+                throw new Exception("VehicleService ERROR: " + ex.Message, ex);
             }
         }
 
@@ -108,7 +105,7 @@ namespace Services.Service
             }
             catch (Exception ex)
             {
-                throw new NotImplementedException("VehicleService ERROR: " + ex.Message);
+                throw new Exception("VehicleService ERROR: " + ex.Message, ex);
             }
         }
 
@@ -121,14 +118,6 @@ namespace Services.Service
                     throw new ArgumentNullException(nameof(vehicle), "VehicleDTO cannot be null.");
                 }
 
-                if (string.IsNullOrWhiteSpace(vehicle.Name))
-                {
-                    throw new ArgumentException("Product name is required");
-                }
-                if (vehicle.Price < 0)
-                {
-                    throw new ArgumentException("Price cannot be negative");
-                }
                 var product = await _vehicleRepo.GetById(vehicle.Id);
                 if (product == null)
                 {
@@ -147,7 +136,6 @@ namespace Services.Service
                     Specifications = vehicle.Specifications,
                     Images = vehicle.Images,
                     StockQuantity = vehicle.StockQuantity,
-                    CreatedAt = DateTime.Now,
                     IsActive = true
                 };
 
@@ -159,7 +147,7 @@ namespace Services.Service
             }
             catch (Exception ex)
             {
-                throw new NotImplementedException("VehicleService ERROR: " + ex.Message);
+                throw new Exception("VehicleService ERROR: " + ex.Message, ex);
             }
         }
     }

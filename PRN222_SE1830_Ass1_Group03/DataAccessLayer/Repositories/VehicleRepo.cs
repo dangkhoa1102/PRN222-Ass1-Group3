@@ -47,7 +47,7 @@ namespace DataAccessLayer.Repositories
         {
             try
             {
-                var vehicle = _context.Vehicles.Find(id);
+                var vehicle = await _context.Vehicles.FindAsync(id);
                 if (vehicle != null)
                 {
                     _context.Vehicles.Remove(vehicle);
