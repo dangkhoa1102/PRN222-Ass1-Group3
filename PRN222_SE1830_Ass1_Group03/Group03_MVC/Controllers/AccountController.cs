@@ -31,7 +31,22 @@ namespace Group03_MVC.Controllers
             User user = accountService.Login(model.Username, model.Password).Result;
             if(user != null)
             {
-                return RedirectToAction("Index", "Home");
+                if (user.Role == "customer")
+                {
+                    return RedirectToAction("Index", "Home");
+                }
+                else if (user.Role == "admin")
+                {
+                    return RedirectToAction("Index", "Privacy");
+                }
+                else if (user.Role == "dealer_staff" || user.Role == "dealer_manager")
+                {
+                    return RedirectToAction("Index", "Home");
+                }
+                else if (user.Role == "evm_staff")
+                {
+                    return RedirectToAction("Index", "Home");
+                }
             }
             ModelState.AddModelError(string.Empty, "Invalid username or password.");
             return View(model);
