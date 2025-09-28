@@ -1,7 +1,21 @@
+﻿using DataAccessLayer;
+using Microsoft.EntityFrameworkCore;
+using Services;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
+
+builder.Services.AddDbContext<Vehicle_Dealer_ManagementContext>(options =>
+{
+    // Đảm bảo Connection String 'DefaultConnection' đã được định nghĩa trong appsettings.json
+    options.UseSqlServer(builder.Configuration.GetConnectionString("MyDbConnection"));
+});
+
+builder.Services.AddScoped<IAccountService, AccountService>();
+
+builder.Services.AddScoped<AccountDao>();
 
 var app = builder.Build();
 
