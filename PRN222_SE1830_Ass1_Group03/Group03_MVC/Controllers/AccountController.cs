@@ -29,9 +29,24 @@ namespace Group03_MVC.Controllers
             }
 
             User user = accountService.Login(model.Username, model.Password).Result;
-            if(user != null)
+            if (user != null)
             {
-                return RedirectToAction("Index", "Home");
+                if (user.Role == "customer")
+                {
+                    return RedirectToAction("Index", "Home");
+                }
+                else if (user.Role == "admin")
+                {
+                    return RedirectToAction("Index", "Privacy");
+                }
+                else if (user.Role == "dealer_staff" || user.Role == "dealer_manager")
+                {
+                    return RedirectToAction("Index", "Home");
+                }
+                else if (user.Role == "evm_staff")
+                {
+                    return RedirectToAction("Index", "Home");
+                }
             }
             ModelState.AddModelError(string.Empty, "Invalid username or password.");
             return View(model);
@@ -58,11 +73,11 @@ namespace Group03_MVC.Controllers
                 Email = model.Email,
                 FullName = model.FullName,
                 Phone = model.Phone,
-                Role = "customer", 
+                Role = "customer",
 
             };
 
-            Console.WriteLine("USERNAME: "+ model.Username);
+            Console.WriteLine("USERNAME: " + model.Username);
             Console.WriteLine("EMAIL: " + model.Email);
             Console.WriteLine("PASSWORD: " + model.Password);
             Console.WriteLine("FULLNAME: " + model.FullName);
@@ -79,6 +94,3 @@ namespace Group03_MVC.Controllers
         }
     }
 }
-
-
-

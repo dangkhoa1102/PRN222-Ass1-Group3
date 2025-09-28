@@ -1,0 +1,231 @@
+﻿@model BusinessObjects.DTO.VehicleDTO
+
+@{
+    ViewData["Title"] = "Add New Vehicle";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-plus me-2"></i>Add New Vehicle
+                    </h4>
+                </div>
+                <div class="card-body p-4">
+                    <form asp-action="Create" method="post" enctype="multipart/form-data" id="vehicleForm">
+                        @Html.AntiForgeryToken()
+                        
+                        <!-- Success/Error Messages -->
+                        @if (TempData["SuccessMessage"] != null)
+                        {
+                            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                                <i class="fas fa-check-circle me-2"></i>@TempData["SuccessMessage"]
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                        }
+                        
+                        @if (!ViewData.ModelState.IsValid)
+                        {
+                            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                                <i class="fas fa-exclamation-circle me-2"></i>
+                                @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+                                {
+                                    <div>@error.ErrorMessage</div>
+                                }
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                        }
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label asp-for="Name" class="form-label required">Vehicle Name</label>
+                                    <input asp-for="Name" class="form-control" placeholder="Enter vehicle name" />
+                                    <span asp-validation-for="Name" class="text-danger"></span>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label asp-for="Brand" class="form-label required">Brand</label>
+                                    <input asp-for="Brand" class="form-control" placeholder="e.g., Toyota" />
+                                    <span asp-validation-for="Brand" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label asp-for="Model" class="form-label required">Model</label>
+                                    <input asp-for="Model" class="form-control" placeholder="e.g., Camry" />
+                                    <span asp-validation-for="Model" class="text-danger"></span>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label asp-for="Year" class="form-label">Year</label>
+                                    <input asp-for="Year" type="number" class="form-control" value="2023" min="1900" max="2030" />
+                                    <span asp-validation-for="Year" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label asp-for="Price" class="form-label required">Price</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">$</span>
+                                        <input asp-for="Price" type="number" class="form-control" step="0.01" min="0" placeholder="0.00" />
+                                    </div>
+                                    <span asp-validation-for="Price" class="text-danger"></span>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label asp-for="StockQuantity" class="form-label">Stock Quantity</label>
+                                    <input asp-for="StockQuantity" type="number" class="form-control" value="10" min="0" />
+                                    <span asp-validation-for="StockQuantity" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group mb-3">
+                            <label asp-for="Description" class="form-label">Description</label>
+                            <textarea asp-for="Description" class="form-control" rows="4" placeholder="Enter vehicle description, features, and highlights..."></textarea>
+                            <span asp-validation-for="Description" class="text-danger"></span>
+                        </div>
+                        
+                        <div class="form-group mb-3">
+                            <label asp-for="Specifications" class="form-label">Specifications</label>
+                            <textarea asp-for="Specifications" class="form-control" rows="4" placeholder="Enter detailed specifications (engine, transmission, fuel type, etc.)"></textarea>
+                            <span asp-validation-for="Specifications" class="text-danger"></span>
+                        </div>
+                        
+                        <!-- Image Upload Section -->
+                        <div class="form-group mb-4">
+                            <label class="form-label fw-bold">
+                                <i class="fas fa-images me-2"></i>Vehicle Images (Optional)
+                            </label>
+                            <div class="mb-3">
+                                <input type="file" name="imageFiles" class="form-control" multiple accept="image/*" id="imageFiles" />
+                                <div class="form-text">Select multiple images (JPG, PNG, GIF, WebP) - Optional</div>
+                            </div>
+                            <div id="imagePreview" class="row"></div>
+                        </div>
+                        
+                        <div class="form-group text-end">
+                            <a asp-action="Index" class="btn btn-secondary me-2">Cancel</a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-2"></i>Add Vehicle
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<style>
+    .form-label.required::after {
+        content: " *";
+        color: #dc3545;
+    }
+    
+    .form-control:focus {
+        border-color: #0d6efd;
+        box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+    }
+    
+    .image-preview-item {
+        position: relative;
+        margin-bottom: 1rem;
+    }
+    
+    .image-preview-item img {
+        width: 100%;
+        height: 150px;
+        object-fit: cover;
+        border-radius: 8px;
+        border: 2px solid #dee2e6;
+    }
+    
+    .image-preview-item .remove-btn {
+        position: absolute;
+        top: 5px;
+        right: 5px;
+        background: rgba(220, 53, 69, 0.9);
+        color: white;
+        border: none;
+        border-radius: 50%;
+        width: 30px;
+        height: 30px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const fileInput = document.getElementById('imageFiles');
+        const imagePreview = document.getElementById('imagePreview');
+        let selectedFiles = [];
+
+        fileInput.addEventListener('change', function(e) {
+            const files = Array.from(e.target.files);
+            selectedFiles = files;
+            previewImages(files);
+            console.log('Files selected:', files.length);
+        });
+
+        function previewImages(files) {
+            imagePreview.innerHTML = '';
+            
+            files.forEach((file, index) => {
+                if (file.type.startsWith('image/')) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        const col = document.createElement('div');
+                        col.className = 'col-md-3';
+                        col.innerHTML = `
+                            <div class="image-preview-item">
+                                <img src="${e.target.result}" alt="Preview ${index + 1}">
+                                <button type="button" class="remove-btn" onclick="removeImage(${index})">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        `;
+                        imagePreview.appendChild(col);
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+        }
+
+        window.removeImage = function(index) {
+            selectedFiles.splice(index, 1);
+            
+            // Update file input
+            const dt = new DataTransfer();
+            selectedFiles.forEach(file => dt.items.add(file));
+            fileInput.files = dt.files;
+            
+            // Refresh preview
+            previewImages(selectedFiles);
+        };
+
+        // Form submission debug
+        document.getElementById('vehicleForm').addEventListener('submit', function(e) {
+            console.log('Form submitting...');
+            console.log('Selected files:', fileInput.files.length);
+        });
+    });
+</script>

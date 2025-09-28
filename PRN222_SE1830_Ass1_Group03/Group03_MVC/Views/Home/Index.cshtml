@@ -2,11 +2,89 @@
     ViewData["Title"] = "Trang chủ";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Chào mừng đến với Group03_MVC</h1>
-    <p class="lead">Hệ thống quản lý đại lý xe hơi</p>
-    <div class="mt-5">
-        <a asp-controller="Account" asp-action="Login" class="btn btn-primary btn-lg me-3">Đăng nhập</a>
-        <a asp-controller="Account" asp-action="Register" class="btn btn-outline-primary btn-lg">Đăng ký</a>
+<!-- Hero Section -->
+<section class="hero-section">
+    <div class="container">
+        <div class="hero-content">
+            <h1 class="hero-title">
+                Chào mừng đến với 
+                <span class="text-primary">AutoDeal Pro</span>
+            </h1>
+            <p class="hero-subtitle">
+                Hệ thống quản lý đại lý xe hơi hiện đại và chuyên nghiệp
+            </p>
+            <div class="hero-actions">
+                <a href="@Url.Action("Index", "Vehicle")" class="btn-hero btn-hero-primary">
+                    Xem danh sách xe
+                </a>
+                <a href="@Url.Action("Register", "Account")" class="btn-hero btn-hero-secondary">
+                    Đăng ký ngay
+                </a>
+            </div>
+        </div>
     </div>
-</div>
+</section>
+
+<!-- Footer -->
+<footer class="footer">
+    <div class="container">
+        <div class="footer-content">
+            <div class="footer-brand">AutoDeal Pro</div>
+            <div class="footer-text">Hệ thống quản lý đại lý xe hơi chuyên nghiệp</div>
+            <div class="footer-text">© 2025 AutoDeal Pro. All rights reserved.</div>
+        </div>
+    </div>
+</footer>
+
+
+@section Scripts {
+    <script>
+        // Simple counter animation
+        document.addEventListener('DOMContentLoaded', function() {
+            const counters = document.querySelectorAll('.stat-number');
+            
+            const animateCounters = () => {
+                counters.forEach(counter => {
+                    const text = counter.textContent;
+                    const hasPlus = text.includes('+');
+                    const hasSlash = text.includes('/');
+                    
+                    if (hasPlus || hasSlash) {
+                        // Don't animate numbers with + or /
+                        return;
+                    }
+                    
+                    const target = parseInt(text);
+                    if (!isNaN(target)) {
+                        let current = 0;
+                        const increment = target / 50;
+                        const timer = setInterval(() => {
+                            current += increment;
+                            if (current >= target) {
+                                counter.textContent = target;
+                                clearInterval(timer);
+                            } else {
+                                counter.textContent = Math.floor(current);
+                            }
+                        }, 30);
+                    }
+                });
+            };
+            
+            // Start animation when stats section is visible
+            const statsSection = document.querySelector('.py-5.bg-white');
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        animateCounters();
+                        observer.unobserve(entry.target);
+                    }
+                });
+            });
+            
+            if (statsSection) {
+                observer.observe(statsSection);
+            }
+        });
+    </script>
+}

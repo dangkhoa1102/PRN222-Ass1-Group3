@@ -1,52 +1,113 @@
 ﻿<!DOCTYPE html>
-<html lang="en">
+<html lang="vi" data-bs-theme="light">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - Group03_MVC</title>
+    <title>@ViewData["Title"] - AutoDeal Pro</title>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+    
+    <!-- Custom Styles -->
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/vehicle-style.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/Group03_MVC.styles.css" asp-append-version="true" />
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="~/favicon.ico">
 </head>
 <body>
-    <header>
-        <nav class="navbar">
-            <div class="nav-container">
-                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">Group03_MVC</a>
-                <button class="navbar-toggler" type="button" id="navbar-toggle" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                <div class="navbar-collapse" id="navbar-menu">
-                    <ul class="navbar-nav">
-                        <li class="nav-item">
-                            <a class="nav-link" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
-                        </li>
-                        <li class="nav-item nav-right">
-                            <a class="nav-link" asp-area="" asp-controller="Account" asp-action="Login">Login</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" asp-area="" asp-controller="Account" asp-action="Register">Register</a>
-                        </li>
-                    </ul>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-white fixed-top shadow-sm">
+        <div class="container">
+            <!-- Brand -->
+            <a class="navbar-brand fw-bold text-primary" asp-controller="Home" asp-action="Index">
+                <i class="bi bi-car-front me-2"></i>AutoDeal Pro
+            </a>
+
+            <!-- Mobile Toggle -->
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <!-- Navigation Items -->
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" asp-controller="Home" asp-action="Index">
+                            <i class="bi bi-house-door me-1"></i>Trang chủ
+                        </a>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-car-front me-1"></i>Quản lý xe
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li>
+                                <a class="dropdown-item" asp-controller="Vehicle" asp-action="Index">
+                                    <i class="bi bi-list-ul me-2"></i>Danh sách xe
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" asp-controller="Vehicle" asp-action="Create">
+                                    <i class="bi bi-plus-circle me-2"></i>Thêm xe mới
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+                </ul>
+
+                <!-- Right Side -->
+                <div class="d-flex gap-2">
+                    <a class="btn btn-outline-primary btn-sm" asp-controller="Account" asp-action="Login">
+                        <i class="bi bi-box-arrow-in-right me-1"></i>Đăng nhập
+                    </a>
+                    <a class="btn btn-primary btn-sm" asp-controller="Account" asp-action="Register">
+                        <i class="bi bi-person-plus me-1"></i>Đăng ký
+                    </a>
                 </div>
             </div>
-        </nav>
-    </header>
-    <div class="container">
-        <main role="main">
-            @RenderBody()
-        </main>
-    </div>
+        </div>
+    </nav>
 
-    <footer class="footer">
+    <!-- Main Content -->
+    <main class="main-content">
+        @RenderBody()
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-light text-dark py-4 mt-5">
         <div class="container">
-            &copy; 2025 - Group03_MVC - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+            <div class="row align-items-center">
+                <div class="col-md-6">
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-car-front-fill fs-4 me-3 text-primary"></i>
+                        <div>
+                            <h6 class="mb-0">AutoDeal Pro</h6>
+                            <small class="text-muted">Hệ thống quản lý đại lý xe hơi chuyên nghiệp</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <small class="text-muted">
+                        © @DateTime.Now.Year AutoDeal Pro. All rights reserved.
+                    </small>
+                </div>
+            </div>
         </div>
     </footer>
-    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
+    <script src="~/js/vehicle-management.js" asp-append-version="true"></script>
+
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

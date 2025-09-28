@@ -45,8 +45,8 @@ namespace Services.Service
                     Year = vehicle.Year,
                     Price = vehicle.Price,
                     Description = vehicle.Description,
-                    Specifications  = vehicle.Specifications,
-                    Images = vehicle.Images,
+                    Specifications = vehicle.Specifications,
+                    Images = vehicle.Images ?? "",
                     StockQuantity = vehicle.StockQuantity,
                     CreatedAt = DateTime.Now,
                     IsActive = true
@@ -134,7 +134,7 @@ namespace Services.Service
                     Price = vehicle.Price,
                     Description = vehicle.Description,
                     Specifications = vehicle.Specifications,
-                    Images = vehicle.Images,
+                    Images = vehicle.Images ?? "", // Đảm bảo Images không null
                     StockQuantity = vehicle.StockQuantity,
                     IsActive = true
                 };
