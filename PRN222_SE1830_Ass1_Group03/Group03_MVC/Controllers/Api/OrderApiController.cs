@@ -136,7 +136,7 @@ namespace Group03_MVC.Controllers.Api
         {
             try
             {
-                // N?u b?n ch?a có Auth thì t?m l?y staffId t? body
+                // N?u b?n ch?a cï¿½ Auth thï¿½ t?m l?y staffId t? body
                 var success = await _orderService.ConfirmOrder(id, confirmDto.StaffId);
 
                 if (success)
@@ -164,7 +164,7 @@ namespace Group03_MVC.Controllers.Api
         {
             try
             {
-                // ví d?: gi? s? l?y customerId t? token claims
+                // vï¿½ d?: gi? s? l?y customerId t? token claims
                 var customerId = Guid.Parse(User.FindFirst("id").Value);
 
                 var success = await _orderService.CompletePayment(id, customerId);

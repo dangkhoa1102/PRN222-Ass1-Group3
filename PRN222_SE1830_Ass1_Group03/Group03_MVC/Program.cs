@@ -1,4 +1,4 @@
-using BusinessObjects.Models; // ch?a Vehicle_Dealer_ManagementContext
+using BusinessObjects.Models;
 using DataAccessLayer;
 using DataAccessLayer.Repositories;
 using Microsoft.EntityFrameworkCore;
@@ -12,15 +12,27 @@ builder.Services.AddControllersWithViews();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// ??ng k� DbContext
+// Đăng ký DbContext
 builder.Services.AddDbContext<Vehicle_Dealer_ManagementContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// ??ng k� Repository + Service
+// Đăng ký Repository + Service
 builder.Services.AddScoped<OrderRepository>();
 builder.Services.AddScoped<VehicleRepository>();
 builder.Services.AddScoped<OrderService>();
 builder.Services.AddScoped<VehicleService>();
+
+// Cấu hình CORS
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAll",
+        policy =>
+        {
+            policy.AllowAnyOrigin()
+                  .AllowAnyMethod()
+                  .AllowAnyHeader();
+        });
+});
 
 var app = builder.Build();
 
@@ -29,7 +41,7 @@ app.UseSwagger();
 app.UseSwaggerUI(c =>
 {
     c.SwaggerEndpoint("/swagger/v1/swagger.json", "Vehicle Dealer Management API v1");
-    c.RoutePrefix = "swagger"; // Swagger UI will be available at /swagger
+    c.RoutePrefix = "swagger";
 });
 
 if (!app.Environment.IsDevelopment())
@@ -42,6 +54,9 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 
 app.UseRouting();
+
+// Thêm CORS vào pipeline
+app.UseCors("AllowAll");
 
 app.UseAuthorization();
 
