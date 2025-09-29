@@ -1,7 +1,34 @@
+﻿using BusinessObjects.DTO;
+using DataAccessLayer;
+using Microsoft.EntityFrameworkCore;
+using Services;
+using Services.Service;
+using DataAccessLayer.Repositories;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
+builder.Services.AddSession(options =>
+{
+    options.IdleTimeout = TimeSpan.FromMinutes(30);
+    options.Cookie.HttpOnly = true;
+    options.Cookie.IsEssential = true;
+});
+
+// Register DbContext first
+builder.Services.AddDbContext<Vehicle_Dealer_ManagementContext>(options =>
+{
+    options.UseSqlServer(builder.Configuration.GetConnectionString("MyDbConnection"));
+});
+
+// Register DAOs and Repositories (these depend on DbContext)
+builder.Services.AddScoped<AccountDao>();
+builder.Services.AddScoped<IVehicleRepository, VehicleRepository>();
+
+// Register Services (these depend on DAOs/Repositories)
+builder.Services.AddScoped<IAccountService, AccountService>();
+builder.Services.AddScoped<IVehicleService, VehicleService>();
 
 var app = builder.Build();
 
@@ -19,9 +46,11 @@ app.UseStaticFiles();
 app.UseRouting();
 
 app.UseAuthorization();
+app.UseSession();
 
+// Set default route to login
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Home}/{action=Index}/{id?}");
+    pattern: "{controller=Account}/{action=Login}/{id?}");
 
 app.Run();
