@@ -488,3 +488,115 @@ input[type="number"]::-webkit-inner-spin-button {
   opacity: 0;
   transition: opacity 0.5s ease-out;
 }
+
+/* User dropdown styles */
+.dropdown-menu {
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.dropdown-item {
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
+}
+
+.dropdown-item i {
+    width: 1.2rem;
+}
+
+.dropdown-item:hover {
+    background-color: #f8f9fa;
+}
+
+.dropdown-item.text-danger:hover {
+    background-color: #dc3545;
+    color: white !important;
+}
+
+.dropdown-divider {
+    margin: 0.5rem 0;
+}
+/* Profile page styles */
+.card {
+    border: none;
+    border-radius: 10px;
+}
+
+.card-header {
+    border-radius: 10px 10px 0 0 !important;
+    padding: 1rem;
+}
+
+.form-label {
+    font-weight: 500;
+}
+
+.form-control:read-only {
+    background-color: #f8f9fa;
+}
+
+.btn-primary {
+    padding: 0.5rem 1rem;
+}
+
+.alert {
+    margin-bottom: 1.5rem;
+}
+
+/* Vehicle card improvements */
+.card {
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+}
+
+.card-img-top {
+    transition: transform 0.3s ease;
+}
+
+.card:hover .card-img-top {
+    transform: scale(1.05);
+}
+
+/* Filter section styling */
+.form-label {
+    font-weight: 500;
+    color: #495057;
+}
+
+.btn-group .btn {
+    flex: 1;
+}
+
+/* Image error handling */
+.card-img-top[style*="display: none"] + div {
+    display: flex !important;
+}
+
+/* Price formatting */
+.text-danger.fs-5 {
+    font-weight: 600;
+}
+
+/* Badge styling */
+.badge {
+    font-size: 0.75em;
+}
+
+/* Responsive improvements */
+@media (max-width: 768px) {
+    .btn-group {
+        flex-direction: column;
+    }
+    
+    .btn-group .btn {
+        margin-bottom: 0.25rem;
+    }
+    
+    .btn-group .btn:last-child {
+        margin-bottom: 0;
+    }
+}

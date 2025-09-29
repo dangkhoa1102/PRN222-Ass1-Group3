@@ -2,6 +2,7 @@
 using BusinessObjects.Models;
 using Microsoft.AspNetCore.Mvc;
 using Services.Service;
+using Group03_MVC.Attributes;
 
 namespace Group03_MVC.Controllers
 {
@@ -16,9 +17,16 @@ namespace Group03_MVC.Controllers
             _webHostEnvironment = webHostEnvironment;
         }
 
+        // Tất cả user đã đăng nhập đều có thể xem danh sách xe
         [HttpGet]
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(string searchTerm = "", string brandFilter = "", string sortBy = "", decimal? minPrice = null, decimal? maxPrice = null)
         {
+            // Check if user is logged in
+            if (string.IsNullOrEmpty(HttpContext.Session.GetString("UserId")))
+            {
+                return RedirectToAction("Login", "Account");
+            }
+
             try
             {
                 var vehicles = await _vehicleService.GetAllVehicles();
@@ -35,6 +43,63 @@ namespace Group03_MVC.Controllers
                     Images = v.Images,
                     StockQuantity = v.StockQuantity
                 }).ToList();
+
+                // Apply filters
+                if (!string.IsNullOrEmpty(searchTerm))
+                {
+                    vehicleDTOs = vehicleDTOs.Where(v => 
+                        v.Name.ToLower().Contains(searchTerm.ToLower()) ||
+                        v.Brand.ToLower().Contains(searchTerm.ToLower()) ||
+                        v.Model.ToLower().Contains(searchTerm.ToLower())
+                    ).ToList();
+                }
+
+                if (!string.IsNullOrEmpty(brandFilter))
+                {
+                    vehicleDTOs = vehicleDTOs.Where(v => v.Brand.ToLower() == brandFilter.ToLower()).ToList();
+                }
+
+                if (minPrice.HasValue)
+                {
+                    vehicleDTOs = vehicleDTOs.Where(v => v.Price >= minPrice.Value).ToList();
+                }
+
+                if (maxPrice.HasValue)
+                {
+                    vehicleDTOs = vehicleDTOs.Where(v => v.Price <= maxPrice.Value).ToList();
+                }
+
+                // Apply sorting
+                switch (sortBy)
+                {
+                    case "name":
+                        vehicleDTOs = vehicleDTOs.OrderBy(v => v.Name).ToList();
+                        break;
+                    case "price_asc":
+                        vehicleDTOs = vehicleDTOs.OrderBy(v => v.Price).ToList();
+                        break;
+                    case "price_desc":
+                        vehicleDTOs = vehicleDTOs.OrderByDescending(v => v.Price).ToList();
+                        break;
+                    case "year":
+                        vehicleDTOs = vehicleDTOs.OrderByDescending(v => v.Year).ToList();
+                        break;
+                    default:
+                        vehicleDTOs = vehicleDTOs.OrderBy(v => v.Name).ToList();
+                        break;
+                }
+
+                // Get unique brands for filter dropdown
+                ViewBag.Brands = vehicles.Select(v => v.Brand).Distinct().OrderBy(b => b).ToList();
+
+                // Pass search parameters back to view
+                ViewBag.SearchTerm = searchTerm;
+                ViewBag.BrandFilter = brandFilter;
+                ViewBag.SortBy = sortBy;
+                ViewBag.MinPrice = minPrice;
+                ViewBag.MaxPrice = maxPrice;
+                ViewBag.UserRole = HttpContext.Session.GetString("Role");
+
                 return View(vehicleDTOs);
             }
             catch (Exception ex)
@@ -44,7 +109,9 @@ namespace Group03_MVC.Controllers
             }
         }
 
+        // Chỉ có evm_staff và dealer_manager mới có thể tạo xe mới
         [HttpGet]
+        [RoleAuthorization("evm_staff", "dealer_manager")]
         public IActionResult Create()
         {
             return View(new VehicleDTO());
@@ -52,14 +119,15 @@ namespace Group03_MVC.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [RoleAuthorization("evm_staff", "dealer_manager")]
         public async Task<IActionResult> Create(VehicleDTO vehicle, List<IFormFile> imageFiles)
         {
             try
             {
-                // Xóa validation error cho Images ngay từ đầu
+                // Remove Images from ModelState validation
                 ModelState.Remove("Images");
 
-                // Validate required fields
+                // Manual validation
                 if (string.IsNullOrWhiteSpace(vehicle.Name))
                 {
                     ModelState.AddModelError("Name", "Vehicle name is required.");
@@ -76,12 +144,31 @@ namespace Group03_MVC.Controllers
                 {
                     ModelState.AddModelError("Price", "Price must be greater than 0.");
                 }
+                
+                // Additional validations
+                if (vehicle.Year.HasValue && (vehicle.Year < 1900 || vehicle.Year > DateTime.Now.Year + 1))
+                {
+                    ModelState.AddModelError("Year", "Please enter a valid year.");
+                }
+                
+                if (vehicle.StockQuantity.HasValue && vehicle.StockQuantity < 0)
+                {
+                    ModelState.AddModelError("StockQuantity", "Stock quantity cannot be negative.");
+                }
 
-                // Xử lý ảnh
+                // Handle image uploads
                 if (imageFiles != null && imageFiles.Count > 0)
                 {
-                    var imageUrls = await UploadImages(imageFiles);
-                    vehicle.Images = string.Join(",", imageUrls);
+                    try
+                    {
+                        var imageUrls = await UploadImages(imageFiles);
+                        vehicle.Images = string.Join(",", imageUrls);
+                    }
+                    catch (Exception imgEx)
+                    {
+                        ModelState.AddModelError("", $"Error uploading images: {imgEx.Message}");
+                        return View(vehicle);
+                    }
                 }
                 else
                 {
@@ -93,6 +180,14 @@ namespace Group03_MVC.Controllers
                     return View(vehicle);
                 }
 
+                // Ensure all required fields are properly set
+                vehicle.Name = vehicle.Name?.Trim();
+                vehicle.Brand = vehicle.Brand?.Trim();
+                vehicle.Model = vehicle.Model?.Trim();
+                vehicle.Description = vehicle.Description?.Trim() ?? "";
+                vehicle.Specifications = vehicle.Specifications?.Trim() ?? "";
+                vehicle.StockQuantity ??= 0;
+
                 var result = await _vehicleService.AddVehicle(vehicle);
                 
                 if (result)
@@ -102,20 +197,39 @@ namespace Group03_MVC.Controllers
                 }
                 else
                 {
-                    ModelState.AddModelError("", "Failed to add vehicle. Please try again.");
+                    ModelState.AddModelError("", "Failed to add vehicle. Please check all fields and try again.");
                     return View(vehicle);
                 }
             }
+            catch (ArgumentException argEx)
+            {
+                ModelState.AddModelError("", $"Validation Error: {argEx.Message}");
+                return View(vehicle);
+            }
+            catch (InvalidOperationException invEx)
+            {
+                ModelState.AddModelError("", invEx.Message);
+                return View(vehicle);
+            }
             catch (Exception ex)
             {
-                ModelState.AddModelError("", $"Error adding vehicle: {ex.Message}");
+                // Log the full exception for debugging
+                Console.WriteLine($"Create Vehicle Error: {ex}");
+                ModelState.AddModelError("", "An unexpected error occurred. Please try again.");
                 return View(vehicle);
             }
         }
 
+        // Tất cả user đã đăng nhập đều có thể xem chi tiết xe
         [HttpGet]
         public async Task<IActionResult> Details(Guid id)
         {
+            // Check if user is logged in
+            if (string.IsNullOrEmpty(HttpContext.Session.GetString("UserId")))
+            {
+                return RedirectToAction("Login", "Account");
+            }
+
             try
             {
                 var vehicle = await _vehicleService.GetVehicleById(id);
@@ -123,6 +237,7 @@ namespace Group03_MVC.Controllers
                 {
                     return NotFound();
                 }
+
                 var vehicleDTO = new VehicleDTO
                 {
                     Id = vehicle.Id,
@@ -136,6 +251,9 @@ namespace Group03_MVC.Controllers
                     Images = vehicle.Images,
                     StockQuantity = vehicle.StockQuantity
                 };
+
+                // Pass user role to view for conditional rendering
+                ViewBag.UserRole = HttpContext.Session.GetString("Role");
                 return View(vehicleDTO);
             }
             catch (Exception ex)
@@ -145,7 +263,9 @@ namespace Group03_MVC.Controllers
             }
         }
 
+        // Chỉ có evm_staff và dealer_manager mới có thể chỉnh sửa xe
         [HttpGet]
+        [RoleAuthorization("evm_staff", "dealer_manager")]
         public async Task<IActionResult> Edit(Guid id)
         {
             try
@@ -155,6 +275,7 @@ namespace Group03_MVC.Controllers
                 {
                     return NotFound();
                 }
+
                 var vehicleDTO = new VehicleDTO
                 {
                     Id = vehicle.Id,
@@ -179,6 +300,7 @@ namespace Group03_MVC.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [RoleAuthorization("evm_staff", "dealer_manager")]
         public async Task<IActionResult> Edit(VehicleDTO vehicle, List<IFormFile> imageFiles)
         {
             try
@@ -242,7 +364,9 @@ namespace Group03_MVC.Controllers
             }
         }
 
+        // Chỉ có evm_staff và dealer_manager mới có thể xóa xe
         [HttpGet]
+        [RoleAuthorization("evm_staff", "dealer_manager")]
         public async Task<IActionResult> Delete(Guid id)
         {
             try
@@ -252,6 +376,7 @@ namespace Group03_MVC.Controllers
                 {
                     return NotFound();
                 }
+
                 var vehicleDTO = new VehicleDTO
                 {
                     Id = vehicle.Id,
@@ -277,6 +402,7 @@ namespace Group03_MVC.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         [ActionName("Delete")]
+        [RoleAuthorization("evm_staff", "dealer_manager")]
         public async Task<IActionResult> DeleteConfirmed(Guid id)
         {
             try

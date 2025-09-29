@@ -1,4 +1,5 @@
-﻿using BusinessObjects.Models;
+﻿using BusinessObjects.DTO;
+using BusinessObjects.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,8 +10,10 @@ namespace Services
 {
     public interface IAccountService
     {
-        public bool Register(User user);
-        public Task<bool> CheckUserExists(string username, string email);
-        public Task<User> Login(string username, string password);
+        Task<bool> Register(User user);
+        Task<bool> CheckUserExists(string username, string email);
+        Task<User> Login(string username, string password);
+        Task<User> GetUserById(Guid id);
+        Task<bool> UpdateUser(UserDTO userDTO);
     }
 }
