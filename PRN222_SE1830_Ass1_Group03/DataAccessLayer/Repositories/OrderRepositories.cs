@@ -17,6 +17,30 @@ namespace DataAccessLayer.Repositories
             return await _context.Orders
                                  .Include(o => o.Customer)
                                  .Include(o => o.Vehicle)
+                                 .Include(o => o.Dealer)
+                                 .OrderByDescending(o => o.CreatedAt)
+                                 .ToListAsync();
+        }
+
+        public async Task<List<Order>> GetByStatus(string status)
+        {
+            return await _context.Orders
+                                 .Include(o => o.Customer)
+                                 .Include(o => o.Vehicle)
+                                 .Include(o => o.Dealer)
+                                 .Where(o => o.Status == status)
+                                 .OrderByDescending(o => o.CreatedAt)
+                                 .ToListAsync();
+        }
+
+        public async Task<List<Order>> GetByCustomerId(Guid customerId)
+        {
+            return await _context.Orders
+                                 .Include(o => o.Customer)
+                                 .Include(o => o.Vehicle)
+                                 .Include(o => o.Dealer)
+                                 .Where(o => o.CustomerId == customerId)
+                                 .OrderByDescending(o => o.CreatedAt)
                                  .ToListAsync();
         }
 
@@ -25,6 +49,8 @@ namespace DataAccessLayer.Repositories
             return await _context.Orders
                                  .Include(o => o.Customer)
                                  .Include(o => o.Vehicle)
+                                 .Include(o => o.Dealer)
+                                 .Include(o => o.OrderHistories)
                                  .FirstOrDefaultAsync(o => o.Id == id);
         }
 
@@ -49,6 +75,22 @@ namespace DataAccessLayer.Repositories
                 return await _context.SaveChangesAsync() > 0;
             }
             return false;
+        }
+
+        public async Task<bool> AddOrderHistory(Guid orderId, string status, string notes, Guid createdBy)
+        {
+            var orderHistory = new OrderHistory
+            {
+                Id = Guid.NewGuid(),
+                OrderId = orderId,
+                Status = status,
+                Notes = notes,
+                CreatedBy = createdBy,
+                CreatedAt = DateTime.UtcNow
+            };
+
+            _context.OrderHistories.Add(orderHistory);
+            return await _context.SaveChangesAsync() > 0;
         }
     }
 }

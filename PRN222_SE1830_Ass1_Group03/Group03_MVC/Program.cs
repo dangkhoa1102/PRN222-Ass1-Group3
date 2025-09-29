@@ -7,27 +7,32 @@ using Services.Service;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
+builder.Services.AddControllers();
 builder.Services.AddControllersWithViews();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// ??ng ký DbContext
+// ??ng kï¿½ DbContext
 builder.Services.AddDbContext<Vehicle_Dealer_ManagementContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// ??ng ký Repository + Service
+// ??ng kï¿½ Repository + Service
 builder.Services.AddScoped<OrderRepository>();
+builder.Services.AddScoped<VehicleRepository>();
 builder.Services.AddScoped<OrderService>();
+builder.Services.AddScoped<VehicleService>();
 
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
+app.UseSwagger();
+app.UseSwaggerUI(c =>
 {
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
-else
+    c.SwaggerEndpoint("/swagger/v1/swagger.json", "Vehicle Dealer Management API v1");
+    c.RoutePrefix = "swagger"; // Swagger UI will be available at /swagger
+});
+
+if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
     app.UseHsts();
