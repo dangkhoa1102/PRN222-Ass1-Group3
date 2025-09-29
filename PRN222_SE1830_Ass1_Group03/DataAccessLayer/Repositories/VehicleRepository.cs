@@ -15,6 +15,7 @@ namespace DataAccessLayer.Repositories
         Task<Boolean>  Add(Vehicle vehicle);
         Task<Boolean>  UpdateAsync(Vehicle vehicle);
         Task<Boolean>  Delete(Guid id);
+        Task<List<Vehicle>> GetAvailableVehicles();
     }
 
     public class VehicleRepository : IVehicleRepository
@@ -24,6 +25,14 @@ namespace DataAccessLayer.Repositories
         public VehicleRepository(Vehicle_Dealer_ManagementContext context)
         {
             _context = context;
+        }
+
+        public async Task<List<Vehicle>> GetAvailableVehicles()
+        {
+            return await _context.Vehicles
+                                 .Where(v => v.IsActive == true && v.StockQuantity > 0)
+                                 .OrderBy(v => v.Name)
+                                 .ToListAsync();
         }
 
         public async Task<bool> Add(Vehicle vehicle)
@@ -105,6 +114,18 @@ namespace DataAccessLayer.Repositories
             {
                 throw new NotImplementedException("VehicleRepo ERROR: " + ex.Message);
             }
+        }
+
+        public async Task<bool> UpdateStock(Guid vehicleId, int quantity)
+        {
+            var vehicle = await _context.Vehicles.FindAsync(vehicleId);
+            if (vehicle != null)
+            {
+                vehicle.StockQuantity = quantity;
+                _context.Vehicles.Update(vehicle);
+                return await _context.SaveChangesAsync() > 0;
+            }
+            return false;
         }
     }
 }

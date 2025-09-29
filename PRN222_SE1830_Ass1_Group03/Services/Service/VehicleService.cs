@@ -27,6 +27,26 @@ namespace Services.Service
             _vehicleRepo = vehicleRepo;
         }
 
+        public async Task<List<VehicleDto>> GetAvailableVehicles()
+        {
+            var vehicles = await _vehicleRepo.GetAvailableVehicles();
+            return vehicles.Select(v => new VehicleDto
+            {
+                Id = v.Id,
+                Name = v.Name,
+                Brand = v.Brand,
+                Model = v.Model,
+                Year = v.Year,
+                Price = v.Price,
+                Description = v.Description,
+                Specifications = v.Specifications,
+                Images = v.Images,
+                StockQuantity = v.StockQuantity,
+                CreatedAt = v.CreatedAt,
+                IsActive = v.IsActive
+            }).ToList();
+        }
+
         public async Task<bool> AddVehicle(VehicleDTO vehicle)
         {
             try
