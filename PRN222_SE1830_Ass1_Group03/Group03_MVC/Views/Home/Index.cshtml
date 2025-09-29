@@ -1,246 +1,89 @@
 ﻿@{
-    ViewData["Title"] = "API Testing Page";
+    ViewData["Title"] = "Trang chủ";
 }
 
-<div class="container mt-4">
-    <h1 class="text-center mb-4">🚗 Vehicle Dealer Management System - API Testing</h1>
-    
-    <div class="row">
-        <!-- Vehicle Testing Section -->
-        <div class="col-md-6 mb-4">
-            <div class="card">
-                <div class="card-header bg-primary text-white">
-                    <h5><i class="fas fa-car"></i> Vehicle APIs</h5>
-                </div>
-                <div class="card-body">
-                    <button class="btn btn-success mb-2 w-100" onclick="testGetVehicles()">
-                        <i class="fas fa-list"></i> Get All Vehicles
-                    </button>
-                    <button class="btn btn-info mb-2 w-100" onclick="testGetVehicleDetails()">
-                        <i class="fas fa-eye"></i> Get Vehicle Details
-                    </button>
-                    <div id="vehicleResult" class="mt-3"></div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Order Testing Section -->
-        <div class="col-md-6 mb-4">
-            <div class="card">
-                <div class="card-header bg-success text-white">
-                    <h5><i class="fas fa-shopping-cart"></i> Order APIs</h5>
-                </div>
-                <div class="card-body">
-                    <button class="btn btn-warning mb-2 w-100" onclick="testGetPendingOrders()">
-                        <i class="fas fa-clock"></i> Get Pending Orders
-                    </button>
-                    <button class="btn btn-primary mb-2 w-100" onclick="testCreateOrder()">
-                        <i class="fas fa-plus"></i> Create New Order
-                    </button>
-                    <button class="btn btn-info mb-2 w-100" onclick="testGetCustomerOrders()">
-                        <i class="fas fa-user"></i> Get Customer Orders
-                    </button>
-                    <div id="orderResult" class="mt-3"></div>
-                </div>
+<!-- Hero Section -->
+<section class="hero-section">
+    <div class="container">
+        <div class="hero-content">
+            <h1 class="hero-title">
+                Chào mừng đến với 
+                <span class="text-primary">AutoDeal Pro</span>
+            </h1>
+            <p class="hero-subtitle">
+                Hệ thống quản lý đại lý xe hơi hiện đại và chuyên nghiệp
+            </p>
+            <div class="hero-actions">
+                <a href="@Url.Action("Index", "Vehicle")" class="btn-hero btn-hero-primary">
+                    Xem danh sách xe
+                </a>
+                <a href="@Url.Action("Register", "Account")" class="btn-hero btn-hero-secondary">
+                    Đăng ký ngay
+                </a>
             </div>
         </div>
     </div>
+</section>
 
-    <!-- Test Results Section -->
-    <div class="row">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-header bg-dark text-white">
-                    <h5><i class="fas fa-terminal"></i> Test Results</h5>
-                </div>
-                <div class="card-body">
-                    <div id="testResults" class="bg-light p-3 rounded" style="min-height: 200px; font-family: monospace;">
-                        <p class="text-muted">Click any button above to start testing APIs...</p>
-                    </div>
-                </div>
-            </div>
+<!-- Footer -->
+<footer class="footer">
+    <div class="container">
+        <div class="footer-content">
+            <div class="footer-brand">AutoDeal Pro</div>
+            <div class="footer-text">Hệ thống quản lý đại lý xe hơi chuyên nghiệp</div>
+            <div class="footer-text">© 2025 AutoDeal Pro. All rights reserved.</div>
         </div>
     </div>
-</div>
+</footer>
 
-<script>
-    let vehicles = [];
-    let orders = [];
-
-    function log(message, type = 'info') {
-        const results = document.getElementById('testResults');
-        const timestamp = new Date().toLocaleTimeString();
-        const color = type === 'error' ? 'text-danger' : type === 'success' ? 'text-success' : 'text-info';
-        results.innerHTML += `<div class="${color}">[${timestamp}] ${message}</div>`;
-        results.scrollTop = results.scrollHeight;
-    }
-
-    function clearResults() {
-        document.getElementById('testResults').innerHTML = '';
-    }
-
-    async function testGetVehicles() {
-        clearResults();
-        log('🚗 Testing GET /Vehicle - Get All Vehicles...');
-        
-        try {
-            const response = await fetch('/Vehicle');
-            if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+@section Scripts {
+    <script>
+        // Simple counter animation
+        document.addEventListener('DOMContentLoaded', function() {
+            const counters = document.querySelectorAll('.stat-number');
             
-            vehicles = await response.json();
-            log(`✅ Success: Found ${vehicles.length} vehicles`, 'success');
-            
-            if (vehicles.length > 0) {
-                log(`   First vehicle: ${vehicles[0].name} - ${vehicles[0].brand}`, 'success');
-                document.getElementById('vehicleResult').innerHTML = `
-                    <div class="alert alert-success">
-                        <strong>Found ${vehicles.length} vehicles</strong><br>
-                        First: ${vehicles[0].name} (${vehicles[0].brand})
-                    </div>
-                `;
-            } else {
-                log('⚠️ No vehicles found in database', 'error');
-                document.getElementById('vehicleResult').innerHTML = `
-                    <div class="alert alert-warning">No vehicles found</div>
-                `;
-            }
-        } catch (error) {
-            log(`❌ Error: ${error.message}`, 'error');
-            document.getElementById('vehicleResult').innerHTML = `
-                <div class="alert alert-danger">Error: ${error.message}</div>
-            `;
-        }
-    }
-
-    async function testGetVehicleDetails() {
-        if (vehicles.length === 0) {
-            log('⚠️ Please get vehicles first', 'error');
-            return;
-        }
-        
-        log('👁️ Testing GET /Vehicle/Details/{id} - Get Vehicle Details...');
-        
-        try {
-            const vehicleId = vehicles[0].id;
-            const response = await fetch(`/Vehicle/Details/${vehicleId}`);
-            if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-            
-            const vehicle = await response.json();
-            log(`✅ Success: Vehicle details retrieved`, 'success');
-            log(`   Vehicle: ${vehicle.name} - Price: ${vehicle.price} VNĐ`, 'success');
-            
-            document.getElementById('vehicleResult').innerHTML = `
-                <div class="alert alert-info">
-                    <strong>Vehicle Details:</strong><br>
-                    Name: ${vehicle.name}<br>
-                    Brand: ${vehicle.brand}<br>
-                    Price: ${vehicle.price} VNĐ<br>
-                    Stock: ${vehicle.stockQuantity}
-                </div>
-            `;
-        } catch (error) {
-            log(`❌ Error: ${error.message}`, 'error');
-        }
-    }
-
-    async function testGetPendingOrders() {
-        log('⏰ Testing GET /Order/PendingOrders - Get Pending Orders...');
-        
-        try {
-            const response = await fetch('/Order/PendingOrders');
-            if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-            
-            orders = await response.json();
-            log(`✅ Success: Found ${orders.length} pending orders`, 'success');
-            
-            document.getElementById('orderResult').innerHTML = `
-                <div class="alert alert-warning">
-                    <strong>Found ${orders.length} pending orders</strong>
-                </div>
-            `;
-        } catch (error) {
-            log(`❌ Error: ${error.message}`, 'error');
-            document.getElementById('orderResult').innerHTML = `
-                <div class="alert alert-danger">Error: ${error.message}</div>
-            `;
-        }
-    }
-
-    async function testCreateOrder() {
-        if (vehicles.length === 0) {
-            log('⚠️ Please get vehicles first', 'error');
-            return;
-        }
-        
-        log('➕ Testing POST /Order/CreateOrder - Create New Order...');
-        
-        try {
-            const orderData = {
-                customerId: generateGuid(),
-                dealerId: generateGuid(),
-                vehicleId: vehicles[0].id,
-                notes: "Test order created via API"
+            const animateCounters = () => {
+                counters.forEach(counter => {
+                    const text = counter.textContent;
+                    const hasPlus = text.includes('+');
+                    const hasSlash = text.includes('/');
+                    
+                    if (hasPlus || hasSlash) {
+                        // Don't animate numbers with + or /
+                        return;
+                    }
+                    
+                    const target = parseInt(text);
+                    if (!isNaN(target)) {
+                        let current = 0;
+                        const increment = target / 50;
+                        const timer = setInterval(() => {
+                            current += increment;
+                            if (current >= target) {
+                                counter.textContent = target;
+                                clearInterval(timer);
+                            } else {
+                                counter.textContent = Math.floor(current);
+                            }
+                        }, 30);
+                    }
+                });
             };
             
-            const response = await fetch('/Order/CreateOrder', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(orderData)
+            // Start animation when stats section is visible
+            const statsSection = document.querySelector('.py-5.bg-white');
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        animateCounters();
+                        observer.unobserve(entry.target);
+                    }
+                });
             });
             
-            if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-            
-            const result = await response.text();
-            log(`✅ Success: Order created`, 'success');
-            log(`   Response: ${result}`, 'success');
-            
-            document.getElementById('orderResult').innerHTML = `
-                <div class="alert alert-success">
-                    <strong>Order Created Successfully!</strong><br>
-                    Vehicle: ${vehicles[0].name}<br>
-                    Response: ${result}
-                </div>
-            `;
-        } catch (error) {
-            log(`❌ Error: ${error.message}`, 'error');
-            document.getElementById('orderResult').innerHTML = `
-                <div class="alert alert-danger">Error: ${error.message}</div>
-            `;
-        }
-    }
-
-    async function testGetCustomerOrders() {
-        log('👤 Testing GET /Order/MyOrders - Get Customer Orders...');
-        
-        try {
-            const customerId = generateGuid();
-            const response = await fetch(`/Order/MyOrders?customerId=${customerId}`);
-            if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-            
-            const customerOrders = await response.json();
-            log(`✅ Success: Found ${customerOrders.length} orders for customer`, 'success');
-            
-            document.getElementById('orderResult').innerHTML = `
-                <div class="alert alert-info">
-                    <strong>Customer Orders:</strong><br>
-                    Found ${customerOrders.length} orders for customer ${customerId.substring(0, 8)}...
-                </div>
-            `;
-        } catch (error) {
-            log(`❌ Error: ${error.message}`, 'error');
-            document.getElementById('orderResult').innerHTML = `
-                <div class="alert alert-danger">Error: ${error.message}</div>
-            `;
-        }
-    }
-
-    function generateGuid() {
-        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-            const r = Math.random() * 16 | 0;
-            const v = c == 'x' ? r : (r & 0x3 | 0x8);
-            return v.toString(16);
+            if (statsSection) {
+                observer.observe(statsSection);
+            }
         });
-    }
-</script>
+    </script>
+}

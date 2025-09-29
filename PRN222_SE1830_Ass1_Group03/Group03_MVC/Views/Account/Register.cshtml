@@ -1,0 +1,78 @@
+﻿@model Group03_MVC.Models.RegisterViewModel
+@{
+    ViewData["Title"] = "Đăng ký tài khoản"; 
+
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-7 col-lg-6">
+        <div class="card shadow-lg mt-5 mb-5 border-0">
+
+            <div class="card-header bg-primary text-white text-center rounded-top">
+                <h3 class="mb-0 py-2">ĐĂNG KÝ TÀI KHOẢN MỚI</h3>
+            </div>
+
+            <div class="card-body p-4">
+
+                <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+
+                @if (TempData["SuccessMessage"] != null)
+                {
+                    <div class="alert alert-success alert-dismissible fade show" role="alert">
+                        <strong>Thành công!</strong> @TempData["SuccessMessage"]
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                }
+
+                <!-- FORM ĐĂNG KÝ CHÍNH -->
+                <form asp-action="Register" method="post">
+
+                    <!-- Username -->
+                    <div class="form-group mb-3">
+                        <label asp-for="Username" class="form-label fw-bold"></label>
+                        <input asp-for="Username" class="form-control" placeholder="Tên đăng nhập (3-50 ký tự)" />
+                        <span asp-validation-for="Username" class="text-danger small"></span>
+                    </div>
+
+                    <!-- FullName -->
+                    <div class="form-group mb-3">
+                        <label asp-for="FullName" class="form-label fw-bold"></label>
+                        <input asp-for="FullName" class="form-control" placeholder="Họ và Tên đầy đủ" />
+                        <span asp-validation-for="FullName" class="text-danger small"></span>
+                    </div>
+
+                    <!-- Email -->
+                    <div class="form-group mb-3">
+                        <label asp-for="Email" class="form-label fw-bold"></label>
+                        <input asp-for="Email" class="form-control" placeholder="Địa chỉ email hợp lệ" />
+                        <span asp-validation-for="Email" class="text-danger small"></span>
+                    </div>
+
+                    <!-- Phone -->
+                    <div class="form-group mb-3">
+                        <label asp-for="Phone" class="form-label fw-bold"></label>
+                        <input asp-for="Phone" class="form-control" placeholder="Số điện thoại" />
+                        <span asp-validation-for="Phone" class="text-danger small"></span>
+                    </div>
+
+                    <!-- Password -->
+                    <div class="form-group mb-3">
+                        <label asp-for="Password" class="form-label fw-bold"></label>
+                        <input asp-for="Password" class="form-control" placeholder="Mật khẩu (tối thiểu 6 ký tự)" />
+                        <span asp-validation-for="Password" class="text-danger small"></span>
+                    </div>
+
+                   
+
+                    <div class="form-group">
+                        <button type="submit" class="btn btn-primary btn-lg w-100 mt-3">ĐĂNG KÝ NGAY</button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="card-footer text-center bg-light border-0">
+                <p class="mb-0">Đã có tài khoản? <a asp-action="Login" class="text-primary fw-bold text-decoration-none">Đăng nhập tại đây!</a></p>
+            </div>
+        </div>
+    </div>
+</div>

@@ -28,14 +28,9 @@ public partial class Vehicle_Dealer_ManagementContext : DbContext
 
     public virtual DbSet<Vehicle> Vehicles { get; set; }
 
-    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-    {
-        if (!optionsBuilder.IsConfigured)
-        {
-            // This will be overridden by dependency injection in Program.cs
-            optionsBuilder.UseSqlServer("Server=(localdb)\\mssqllocaldb;Database=EVDealerSystem;Trusted_Connection=true;MultipleActiveResultSets=true");
-        }
-    }
+
+
+
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

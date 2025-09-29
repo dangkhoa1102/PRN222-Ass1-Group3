@@ -1,7 +1,9 @@
+using BusinessObjects.DTO;
 using BusinessObjects.Models;
 using DataAccessLayer;
 using DataAccessLayer.Repositories;
 using Microsoft.EntityFrameworkCore;
+using Services;
 using Services.Service;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -12,15 +14,21 @@ builder.Services.AddControllersWithViews();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// Đăng ký DbContext
+// Đăng ký DbContext (CHỈ 1 LẦN)
 builder.Services.AddDbContext<Vehicle_Dealer_ManagementContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// Đăng ký Repository + Service
+// Đăng ký DAOs
+builder.Services.AddScoped<AccountDao>();
+
+// Đăng ký Repository
 builder.Services.AddScoped<OrderRepository>();
-builder.Services.AddScoped<VehicleRepository>();
+builder.Services.AddScoped<IVehicleRepository, VehicleRepository>();
+
+// Đăng ký Service
 builder.Services.AddScoped<OrderService>();
-builder.Services.AddScoped<VehicleService>();
+builder.Services.AddScoped<IAccountService, AccountService>();
+builder.Services.AddScoped<IVehicleService, VehicleService>();
 
 // Cấu hình CORS
 builder.Services.AddCors(options =>
@@ -52,7 +60,6 @@ if (!app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
-
 app.UseRouting();
 
 // Thêm CORS vào pipeline
@@ -61,8 +68,10 @@ app.UseCors("AllowAll");
 app.UseAuthorization();
 
 app.MapControllers();
+
+// Set default route to login
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Home}/{action=Index}/{id?}");
+    pattern: "{controller=Account}/{action=Login}/{id?}");
 
 app.Run();
