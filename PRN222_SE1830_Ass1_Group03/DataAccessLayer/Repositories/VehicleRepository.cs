@@ -94,7 +94,6 @@ namespace DataAccessLayer.Repositories
         {
             try
             {
-                vehicle.StockQuantity = quantity;
                 _context.Vehicles.Update(vehicle);
                 if(await _context.SaveChangesAsync() > 0) 
                 {
