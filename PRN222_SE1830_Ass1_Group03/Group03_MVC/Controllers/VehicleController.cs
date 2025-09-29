@@ -150,11 +150,11 @@ namespace Group03_MVC.Controllers
         {
             try
             {
-                var vehicle = await _vehicleService.GetVehicleById(id);
-                if (vehicle == null)
-                {
-                    return NotFound();
-                }
+            var vehicle = await _vehicleService.GetVehicleById(id);
+            if (vehicle == null)
+            {
+                return NotFound();
+            }
                 var vehicleDTO = new VehicleDTO
                 {
                     Id = vehicle.Id,
@@ -219,8 +219,8 @@ namespace Group03_MVC.Controllers
 
                 if (!ModelState.IsValid)
                 {
-                    return View(vehicle);
-                }
+            return View(vehicle);
+        }
 
                 var result = await _vehicleService.UpdateVehicle(vehicle);
                 

@@ -70,7 +70,7 @@ namespace DataAccessLayer.Repositories
             try
             {
                 return await _context.Vehicles.ToListAsync();
-            }
+        }
             catch (Exception ex)
             {
                 throw new NotImplementedException("VehicleRepo ERROR: " + ex.Message);
@@ -83,9 +83,9 @@ namespace DataAccessLayer.Repositories
             {
                 Vehicle? vehicle = await _context.Vehicles.FirstOrDefaultAsync(x => x.Id == id);
                 return vehicle;
-            }
+        }
             catch (Exception ex)
-            {
+        {
                 throw new NotImplementedException("VehicleRepo ERROR: " + ex.Message);
             }
         }
@@ -94,13 +94,14 @@ namespace DataAccessLayer.Repositories
         {
             try
             {
+                vehicle.StockQuantity = quantity;
                 _context.Vehicles.Update(vehicle);
                 if(await _context.SaveChangesAsync() > 0) 
                 {
                     return true; 
-                }
-                return false;
             }
+            return false;
+        }
             catch (Exception ex)
             {
                 throw new NotImplementedException("VehicleRepo ERROR: " + ex.Message);

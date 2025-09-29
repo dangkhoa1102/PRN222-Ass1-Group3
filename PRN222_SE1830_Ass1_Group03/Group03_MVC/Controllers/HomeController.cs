@@ -18,6 +18,16 @@ namespace Group03_MVC.Controllers
             return View();
         }
 
+        public IActionResult CustomerPortal()
+        {
+            return RedirectToAction("Index", "Vehicle");
+        }
+
+        public IActionResult StaffPortal()
+        {
+            return RedirectToAction("PendingOrders", "Order");
+        }
+
         public IActionResult Privacy()
         {
             return View();

@@ -19,7 +19,7 @@ namespace Services.Service
     }
 
     public class VehicleService : IVehicleService
-    {
+        {
         private readonly IVehicleRepository _vehicleRepo;
         
         public VehicleService(IVehicleRepository vehicleRepo)
@@ -34,23 +34,23 @@ namespace Services.Service
                 if (vehicle == null)
                 {
                     throw new ArgumentNullException(nameof(vehicle), "VehicleDTO cannot be null.");
-                }
+        }
 
                 var x = new Vehicle
-                {
+            {
                     Id = Guid.NewGuid(),
-                    Name = vehicle.Name,
-                    Brand = vehicle.Brand,
-                    Model = vehicle.Model,
-                    Year = vehicle.Year,
-                    Price = vehicle.Price,
-                    Description = vehicle.Description,
-                    Specifications = vehicle.Specifications,
+                Name = vehicle.Name,
+                Brand = vehicle.Brand,
+                Model = vehicle.Model,
+                Year = vehicle.Year,
+                Price = vehicle.Price,
+                Description = vehicle.Description,
+                Specifications = vehicle.Specifications,
                     Images = vehicle.Images ?? "",
-                    StockQuantity = vehicle.StockQuantity,
+                StockQuantity = vehicle.StockQuantity,
                     CreatedAt = DateTime.Now,
                     IsActive = true
-                };
+            };
 
                 if (await _vehicleRepo.Add(x))
                 {
@@ -137,7 +137,7 @@ namespace Services.Service
                 product.IsActive = true;
 
                 if (await _vehicleRepo.UpdateAsync(product))
-                {
+        {
                     return true;
                 }
                 return false;
