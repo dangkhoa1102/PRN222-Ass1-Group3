@@ -13,7 +13,7 @@ namespace DataAccessLayer.Repositories
         Task<List<Vehicle>> GetAll();
         Task<Vehicle?> GetById(Guid id);
         Task<Boolean>  Add(Vehicle vehicle);
-        Task<Boolean>  Update(Vehicle vehicle);
+        Task<Boolean>  UpdateAsync(Vehicle vehicle);
         Task<Boolean>  Delete(Guid id);
     }
 
@@ -90,7 +90,7 @@ namespace DataAccessLayer.Repositories
             }
         }
 
-        public async Task<bool> Update(Vehicle vehicle)
+        public async Task<bool> UpdateAsync(Vehicle vehicle)
         {
             try
             {

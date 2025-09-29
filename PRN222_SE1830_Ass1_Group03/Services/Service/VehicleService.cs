@@ -124,22 +124,19 @@ namespace Services.Service
                     throw new KeyNotFoundException("Product not found");
                 }
 
-                var x = new Vehicle
-                {
-                    Id = vehicle.Id,
-                    Name = vehicle.Name,
-                    Brand = vehicle.Brand,
-                    Model = vehicle.Model,
-                    Year = vehicle.Year,
-                    Price = vehicle.Price,
-                    Description = vehicle.Description,
-                    Specifications = vehicle.Specifications,
-                    Images = vehicle.Images ?? "", // Đảm bảo Images không null
-                    StockQuantity = vehicle.StockQuantity,
-                    IsActive = true
-                };
+                product.Id = vehicle.Id;
+                product.Name = vehicle.Name;
+                product.Brand = vehicle.Brand;
+                product.Model = vehicle.Model;
+                product.Year = vehicle.Year;
+                product.Price = vehicle.Price;
+                product.Description = vehicle.Description;
+                product.Specifications = vehicle.Specifications;
+                product.Images = vehicle.Images ?? "";
+                product.StockQuantity = vehicle.StockQuantity;
+                product.IsActive = true;
 
-                if (await _vehicleRepo.Update(x))
+                if (await _vehicleRepo.UpdateAsync(product))
                 {
                     return true;
                 }
