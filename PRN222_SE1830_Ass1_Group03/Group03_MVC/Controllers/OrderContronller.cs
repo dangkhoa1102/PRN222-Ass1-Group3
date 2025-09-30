@@ -100,9 +100,37 @@ namespace Group03_MVC.Controllers
             return Json(order);
         }
 
-        public IActionResult Index()
+        public async Task<IActionResult> Index()
         {
-            return RedirectToAction("PendingOrders");
+            // Lấy role và userId từ Session
+            var role = HttpContext.Session.GetString("Role");
+            var userIdStr = HttpContext.Session.GetString("UserId");
+            Guid customerId = string.IsNullOrEmpty(userIdStr) ? Guid.Empty : Guid.Parse(userIdStr);
+
+            var myOrders = new List<Orderdto>();
+            var pendingOrders = new List<Orderdto>();
+
+            if (role == "customer")
+            {
+                myOrders = await _orderService.GetCustomerOrders(customerId);
+            }
+            else if (role == "evm_staff" || role == "admin" || role == "dealer_staff" || role == "dealer_manager")
+            {
+                pendingOrders = await _orderService.GetByStatus("Pending");
+            }
+            else if (role == "admin")
+            {
+                myOrders = await _orderService.GetAllOrders();
+            }
+
+            var vm = new OrdersDashboardViewModel
+            {
+                MyOrders = myOrders,
+                PendingOrders = pendingOrders
+            };
+
+            return View(vm);
         }
+
     }
 }

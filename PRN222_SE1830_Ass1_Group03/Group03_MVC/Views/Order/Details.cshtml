@@ -3,6 +3,12 @@
     ViewData["Title"] = "Chi tiết đơn hàng";
 }
 
+@if (Model == null)
+{
+    <div class="alert alert-danger">Không tìm thấy đơn hàng.</div>
+}
+else
+{
 <div class="container mt-4">
     <h2>📋 Chi tiết đơn hàng</h2>
 
@@ -32,3 +38,4 @@
     <a href="@Url.Action("MyOrders", "Order", new { customerId = Model.CustomerId })"
        class="btn btn-secondary mt-3">⬅ Quay lại</a>
 </div>
+}

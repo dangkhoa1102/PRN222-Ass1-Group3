@@ -35,7 +35,30 @@
                     <td>@order.OrderNumber</td>
                     <td>@order.VehicleName</td>
                     <td>@order.TotalAmount.ToString("N0") đ</td>
-                    <td><span class="badge bg-info text-dark">@order.Status</span></td>
+
+<td>
+    @if (order.Status?.Equals("pending", StringComparison.OrdinalIgnoreCase) == true)
+    {
+        <span class="badge bg-warning text-dark">@order.Status</span> <!-- vàng đậm -->
+    }
+    else if (order.Status?.Equals("processing", StringComparison.OrdinalIgnoreCase) == true)
+    {
+        <span class="badge bg-warning-subtle text-warning">@order.Status</span> <!-- vàng nhạt -->
+    }
+    else if (order.Status?.Equals("confirmed", StringComparison.OrdinalIgnoreCase) == true)
+    {
+        <span class="badge bg-success-subtle text-success">@order.Status</span> <!-- xanh nhạt -->
+    }
+    else if (order.Status?.Equals("completed", StringComparison.OrdinalIgnoreCase) == true)
+    {
+        <span class="badge bg-success">@order.Status</span> <!-- xanh lá đậm -->
+    }
+    else
+    {
+        <span class="badge bg-secondary">@order.Status</span> <!-- fallback -->
+    }
+</td>
+
                     <td>
                         @if (order.PaymentStatus?.Equals("Paid", StringComparison.OrdinalIgnoreCase) == true)
                         {
