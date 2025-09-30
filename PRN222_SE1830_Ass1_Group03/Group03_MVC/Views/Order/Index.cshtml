@@ -1,0 +1,31 @@
+﻿@{
+    ViewData["Title"] = "Quản lý đơn hàng";
+}
+
+<div class="container mt-4">
+    <h2 class="mb-4">📦 Quản lý đơn hàng</h2>
+
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card shadow-sm mb-3">
+                <div class="card-body text-center">
+                    <h5 class="card-title">👤 Đơn hàng của tôi</h5>
+                    <p class="card-text">Xem tất cả đơn hàng mà bạn đã đặt.</p>
+                    <a href="@Url.Action("MyOrders", "Order", new { customerId = Guid.NewGuid() })"
+                       class="btn btn-primary">Xem đơn hàng</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card shadow-sm mb-3">
+                <div class="card-body text-center">
+                    <h5 class="card-title">🕒 Đơn hàng chờ xác nhận</h5>
+                    <p class="card-text">Dành cho nhân viên: quản lý các đơn đang chờ.</p>
+                    <a href="@Url.Action("PendingOrders", "Order")"
+                       class="btn btn-warning">Xem đơn chờ</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
