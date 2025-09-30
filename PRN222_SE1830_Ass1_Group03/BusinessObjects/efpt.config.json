@@ -3,7 +3,7 @@
    "ContextClassName": "Vehicle_Dealer_ManagementContext",
    "ContextNamespace": null,
    "FilterSchemas": false,
-   "IncludeConnectionString": true,
+   "IncludeConnectionString": false,
    "ModelNamespace": null,
    "OutputContextPath": null,
    "OutputPath": "Models",
@@ -24,6 +24,10 @@
       },
       {
          "Name": "[dbo].[orders]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[test_drive_appointments]",
          "ObjectType": 0
       },
       {
