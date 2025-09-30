@@ -1,23 +1,35 @@
-﻿using DataAccessLayer;
+﻿using BusinessObjects.DTO;
+using DataAccessLayer;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
 using Services;
+using Services.Service;
+using DataAccessLayer.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
+builder.Services.AddSession(options =>
+{
+    options.IdleTimeout = TimeSpan.FromMinutes(30);
+    options.Cookie.HttpOnly = true;
+    options.Cookie.IsEssential = true;
+});
 
+// Register DbContext first
 builder.Services.AddDbContext<Vehicle_Dealer_ManagementContext>(options =>
 {
-    // Đảm bảo Connection String 'DefaultConnection' đã được định nghĩa trong appsettings.json
     options.UseSqlServer(builder.Configuration.GetConnectionString("MyDbConnection"));
 });
 
-builder.Services.AddScoped<IAccountService, AccountService>();
-
+// Register DAOs and Repositories (these depend on DbContext)
 builder.Services.AddScoped<AccountDao>();
+builder.Services.AddScoped<IVehicleRepository, VehicleRepository>();
 
+// Register Services (these depend on DAOs/Repositories)
+builder.Services.AddScoped<IAccountService, AccountService>();
+builder.Services.AddScoped<IVehicleService, VehicleService>();
 
 var app = builder.Build();
 
@@ -35,7 +47,9 @@ app.UseStaticFiles();
 app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseSession();
 
+// Set default route to login
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Account}/{action=Login}/{id?}");

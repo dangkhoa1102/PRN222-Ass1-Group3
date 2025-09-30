@@ -1,0 +1,105 @@
+﻿@model BusinessObjects.DTO.VehicleDTO
+
+@{
+    ViewData["Title"] = "Chi tiết xe";
+    var userRole = ViewBag.UserRole as string;
+    var canManage = userRole == "evm_staff" || userRole == "dealer_manager";
+}
+
+<div class="container py-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0">
+                        <i class="bi bi-car-front me-2"></i>Chi tiết xe: @Model.Name
+                    </h4>
+                    <div>
+                        @if (canManage)
+                        {
+                            <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-warning me-2">
+                                <i class="bi bi-pencil me-1"></i>Chỉnh sửa
+                            </a>
+                        }
+                        <a asp-action="Index" class="btn btn-secondary">
+                            <i class="bi bi-arrow-left me-1"></i>Quay lại
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            @if (!string.IsNullOrEmpty(Model.Images))
+                            {
+                                var images = Model.Images.Split(',');
+                                <div id="vehicleCarousel" class="carousel slide" data-bs-ride="carousel">
+                                    <div class="carousel-inner">
+                                        @for (int i = 0; i < images.Length; i++)
+                                        {
+                                            <div class="carousel-item @(i == 0 ? "active" : "")">
+                                                <img src="@images[i]" class="d-block w-100" alt="@Model.Name" style="height: 300px; object-fit: cover;">
+                                            </div>
+                                        }
+                                    </div>
+                                    @if (images.Length > 1)
+                                    {
+                                        <button class="carousel-control-prev" type="button" data-bs-target="#vehicleCarousel" data-bs-slide="prev">
+                                            <span class="carousel-control-prev-icon"></span>
+                                        </button>
+                                        <button class="carousel-control-next" type="button" data-bs-target="#vehicleCarousel" data-bs-slide="next">
+                                            <span class="carousel-control-next-icon"></span>
+                                        </button>
+                                    }
+                                </div>
+                            }
+                        </div>
+                        <div class="col-md-6">
+                            <table class="table">
+                                <tr>
+                                    <td><strong>Tên xe:</strong></td>
+                                    <td>@Model.Name</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Thương hiệu:</strong></td>
+                                    <td>@Model.Brand</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Model:</strong></td>
+                                    <td>@Model.Model</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Năm sản xuất:</strong></td>
+                                    <td>@Model.Year</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Giá:</strong></td>
+                                    <td class="text-danger fw-bold">@Model.Price.ToString("C")</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Số lượng tồn kho:</strong></td>
+                                    <td>@Model.StockQuantity</td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    @if (!string.IsNullOrEmpty(Model.Description))
+                    {
+                        <div class="mt-4">
+                            <h5>Mô tả:</h5>
+                            <p>@Model.Description</p>
+                        </div>
+                    }
+                    
+                    @if (!string.IsNullOrEmpty(Model.Specifications))
+                    {
+                        <div class="mt-4">
+                            <h5>Thông số kỹ thuật:</h5>
+                            <p>@Model.Specifications</p>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

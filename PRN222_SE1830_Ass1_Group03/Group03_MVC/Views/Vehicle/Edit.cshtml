@@ -1,0 +1,342 @@
+﻿@model BusinessObjects.DTO.VehicleDTO
+
+@{
+    ViewData["Title"] = "Edit Vehicle";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- Header -->
+            <div class="d-flex align-items-center mb-4">
+                <a asp-action="Index" class="btn btn-outline-secondary me-3">
+                    <i class="fas fa-arrow-left"></i>
+                </a>
+                <div>
+                    <h2 class="text-primary mb-0">
+                        <i class="fas fa-edit me-2"></i>Edit Vehicle
+                    </h2>
+                    <p class="text-muted mb-0">Update vehicle information</p>
+                </div>
+            </div>
+
+            <!-- Form Card -->
+            <div class="card shadow">
+                <div class="card-body p-4">
+                    <form asp-action="Edit" method="post" enctype="multipart/form-data" novalidate>
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" asp-for="Id" />
+
+                        <!-- Status Alert -->
+                        <div class="alert alert-info d-flex align-items-center mb-4">
+                            <i class="fas fa-info-circle me-2"></i>
+                            <div>
+                                <strong>Editing Vehicle:</strong> @Model.Name
+                                <br>
+                                <small class="text-muted">Vehicle ID: @Model.Id</small>
+                            </div>
+                        </div>
+
+                        <!-- Basic Information Section -->
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label asp-for="Name" class="form-label required">Vehicle Name</label>
+                                    <input asp-for="Name" class="form-control" placeholder="Enter vehicle name">
+                                    <span asp-validation-for="Name" class="text-danger small"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-group mb-3">
+                                    <label asp-for="Brand" class="form-label required">Brand</label>
+                                    <input asp-for="Brand" class="form-control" placeholder="e.g., Toyota">
+                                    <span asp-validation-for="Brand" class="text-danger small"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-group mb-3">
+                                    <label asp-for="Model" class="form-label required">Model</label>
+                                    <input asp-for="Model" class="form-control" placeholder="e.g., Camry">
+                                    <span asp-validation-for="Model" class="text-danger small"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row mb-4">
+                            <div class="col-md-3">
+                                <div class="form-group mb-3">
+                                    <label asp-for="Year" class="form-label">Year</label>
+                                    <input asp-for="Year" type="number" class="form-control" min="1900" max="2025">
+                                    <span asp-validation-for="Year" class="text-danger small"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group mb-3">
+                                    <label asp-for="Price" class="form-label required">Price</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">$</span>
+                                        <input asp-for="Price" type="number" class="form-control" step="0.01" min="0">
+                                    </div>
+                                    <span asp-validation-for="Price" class="text-danger small"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-group mb-3">
+                                    <label asp-for="StockQuantity" class="form-label">Stock Quantity</label>
+                                    <input asp-for="StockQuantity" type="number" class="form-control" min="0">
+                                    <span asp-validation-for="StockQuantity" class="text-danger small"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <div class="form-group mb-3">
+                                    <label asp-for="Description" class="form-label">Description</label>
+                                    <textarea asp-for="Description" class="form-control" rows="4"></textarea>
+                                    <span asp-validation-for="Description" class="text-danger small"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <div class="form-group mb-3">
+                                    <label asp-for="Specifications" class="form-label">Specifications</label>
+                                    <textarea asp-for="Specifications" class="form-control" rows="6"></textarea>
+                                    <span asp-validation-for="Specifications" class="text-danger small"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Current Images -->
+                        @if (!string.IsNullOrEmpty(Model.Images))
+                        {
+                            <div class="mb-4">
+                                <h6 class="fw-bold">
+                                    <i class="fas fa-images me-2"></i>Current Images
+                                </h6>
+                                <div class="row">
+                                    @foreach (var image in Model.Images.Split(','))
+                                    {
+                                        <div class="col-md-3 mb-2">
+                                            <div class="position-relative">
+                                                <img src="@image.Trim()" class="img-thumbnail" style="height: 100px; width: 100%; object-fit: cover;" alt="Vehicle Image">
+                                                <button type="button" class="btn btn-sm btn-danger position-absolute top-0 end-0" onclick="removeCurrentImage(this, '@image.Trim()')">
+                                                    <i class="fas fa-times"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        }
+
+                        <!-- Upload New Images -->
+                        <div class="form-group mb-4">
+                            <label class="form-label fw-bold">
+                                <i class="fas fa-plus me-2"></i>Add New Images
+                            </label>
+                            <div class="upload-container">
+                                <div class="upload-area" id="uploadArea">
+                                    <div class="upload-content">
+                                        <i class="fas fa-cloud-upload-alt fa-3x text-primary mb-3"></i>
+                                        <h6 class="text-primary mb-2">Upload Additional Images</h6>
+                                        <p class="mb-2">Drag and drop new images here or click to browse</p>
+                                        <p class="text-muted small mb-3">Supported formats: JPG, PNG, GIF, WebP (Max 5MB each)</p>
+                                        <button type="button" class="btn btn-outline-primary btn-sm">
+                                            <i class="fas fa-plus me-2"></i>Choose Files
+                                        </button>
+                                    </div>
+                                    <input type="file" id="imageFiles" name="imageFiles" class="form-control" multiple accept="image/*" style="display: none;">
+                                </div>
+                                <div id="imagePreview" class="row mt-3"></div>
+                            </div>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="d-flex justify-content-between mt-5 pt-3" style="border-top: 1px solid #dee2e6;">
+                            <div>
+                                <a asp-action="Index" class="btn btn-secondary btn-lg me-2">
+                                    <i class="fas fa-times me-2"></i>Cancel
+                                </a>
+                            </div>
+                            <div>
+                                <button type="submit" class="btn btn-warning btn-lg">
+                                    <i class="fas fa-save me-2"></i>Update Vehicle
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .form-label.required::after {
+        content: " *";
+        color: #dc3545;
+    }
+
+    .form-control:focus {
+        border-color: #007bff;
+        box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+    }
+
+    .alert-info {
+        border-left: 4px solid #0dcaf0;
+    }
+    
+    .upload-container {
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        padding: 1rem;
+        background-color: #f8f9fa;
+    }
+    
+    .upload-area {
+        border: 2px dashed #0d6efd;
+        border-radius: 8px;
+        padding: 2rem;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        background-color: white;
+    }
+    
+    .upload-area:hover {
+        border-color: #0b5ed7;
+        background-color: #f8f9fa;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    
+    .upload-area.dragover {
+        border-color: #0b5ed7;
+        background-color: #e3f2fd;
+        transform: scale(1.02);
+    }
+    
+    .image-preview-item {
+        position: relative;
+        margin-bottom: 1rem;
+    }
+    
+    .image-preview-item img {
+        width: 100%;
+        height: 100px;
+        object-fit: cover;
+        border-radius: 8px;
+        border: 2px solid #dee2e6;
+    }
+    
+    .image-preview-item .remove-btn {
+        position: absolute;
+        top: 5px;
+        right: 5px;
+        background: rgba(220, 53, 69, 0.9);
+        color: white;
+        border: none;
+        border-radius: 50%;
+        width: 25px;
+        height: 25px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('imageFiles');
+        const imagePreview = document.getElementById('imagePreview');
+        const maxFiles = 5;
+        let selectedFiles = [];
+
+        // Click to upload
+        uploadArea.addEventListener('click', (e) => {
+            e.preventDefault();
+            fileInput.click();
+        });
+
+        // Drag and drop
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+
+        uploadArea.addEventListener('dragleave', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            handleFiles(e.dataTransfer.files);
+        });
+
+        // File input change
+        fileInput.addEventListener('change', (e) => {
+            handleFiles(e.target.files);
+        });
+
+        function handleFiles(files) {
+            Array.from(files).forEach(file => {
+                if (selectedFiles.length >= maxFiles) {
+                    alert(`Maximum ${maxFiles} images allowed`);
+                    return;
+                }
+
+                if (file.type.startsWith('image/')) {
+                    selectedFiles.push(file);
+                    previewImage(file);
+                } else {
+                    alert('Please select only image files');
+                }
+            });
+        }
+
+        function previewImage(file) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const col = document.createElement('div');
+                col.className = 'col-md-3';
+                col.innerHTML = `
+                    <div class="image-preview-item">
+                        <img src="${e.target.result}" alt="Preview">
+                        <button type="button" class="remove-btn" onclick="removeImage(this)">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                `;
+                imagePreview.appendChild(col);
+            };
+            reader.readAsDataURL(file);
+        }
+
+        window.removeImage = function(btn) {
+            const col = btn.closest('.col-md-3');
+            const index = Array.from(imagePreview.children).indexOf(col);
+            selectedFiles.splice(index, 1);
+            col.remove();
+        };
+
+        window.removeCurrentImage = function(btn, imageUrl) {
+            if (confirm('Are you sure you want to remove this image?')) {
+                const hiddenInput = document.createElement('input');
+                hiddenInput.type = 'hidden';
+                hiddenInput.name = 'removedImages';
+                hiddenInput.value = imageUrl;
+                document.querySelector('form').appendChild(hiddenInput);
+                
+                btn.closest('.col-md-3').remove();
+            }
+        };
+    });
+</script>

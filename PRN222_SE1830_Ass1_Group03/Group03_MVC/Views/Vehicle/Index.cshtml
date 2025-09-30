@@ -1,0 +1,172 @@
+﻿@model List<VehicleDTO>
+@{
+    ViewData["Title"] = "Danh sách xe";
+    var userRole = ViewBag.UserRole as string;
+    var canManage = userRole == "evm_staff" || userRole == "dealer_manager";
+    var brands = ViewBag.Brands as List<string>;
+}
+
+<div class="container-fluid py-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0">
+                        <i class="bi bi-car-front me-2"></i>Danh sách xe
+                    </h4>
+                    @if (canManage)
+                    {
+                        <a asp-action="Create" class="btn btn-primary">
+                            <i class="bi bi-plus-circle me-1"></i>Thêm xe mới
+                        </a>
+                    }
+                </div>
+
+                <!-- Filter and Search Section -->
+                <div class="card-body">
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <form method="get" asp-action="Index" class="row g-3">
+                                <div class="col-md-3">
+                                    <label class="form-label">Tìm kiếm</label>
+                                    <input type="text" name="searchTerm" value="@ViewBag.SearchTerm" 
+                                           class="form-control" placeholder="Tên xe, thương hiệu, model...">
+                                </div>
+                                <div class="col-md-2">
+                                    <label class="form-label">Thương hiệu</label>
+                                    <select name="brandFilter" class="form-select">
+                                        <option value="">Tất cả</option>
+                                        @if (brands != null)
+                                        {
+                                            @foreach (var brand in brands)
+                                            {
+                                                <option value="@brand" selected="@(ViewBag.BrandFilter == brand)">@brand</option>
+                                            }
+                                        }
+                                    </select>
+                                </div>
+                                <div class="col-md-2">
+                                    <label class="form-label">Giá từ</label>
+                                    <input type="number" name="minPrice" value="@ViewBag.MinPrice" 
+                                           class="form-control" placeholder="0" min="0">
+                                </div>
+                                <div class="col-md-2">
+                                    <label class="form-label">Giá đến</label>
+                                    <input type="number" name="maxPrice" value="@ViewBag.MaxPrice" 
+                                           class="form-control" placeholder="0" min="0">
+                                </div>
+                                <div class="col-md-2">
+                                    <label class="form-label">Sắp xếp</label>
+                                    <select name="sortBy" class="form-select">
+                                        <option value="name" selected="@(ViewBag.SortBy == "name")">Tên A-Z</option>
+                                        <option value="price_asc" selected="@(ViewBag.SortBy == "price_asc")">Giá thấp - cao</option>
+                                        <option value="price_desc" selected="@(ViewBag.SortBy == "price_desc")">Giá cao - thấp</option>
+                                        <option value="year" selected="@(ViewBag.SortBy == "year")">Năm mới nhất</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-1 d-flex align-items-end">
+                                    <button type="submit" class="btn btn-primary w-100">
+                                        <i class="bi bi-search"></i>
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- Results Section -->
+                    @if (Model != null && Model.Any())
+                    {
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <span class="text-muted">Hiển thị @Model.Count xe</span>
+                            <a href="@Url.Action("Index")" class="btn btn-outline-secondary btn-sm">
+                                <i class="bi bi-arrow-clockwise me-1"></i>Xóa bộ lọc
+                            </a>
+                        </div>
+
+                        <div class="row" id="vehicleList">
+                            @foreach (var vehicle in Model)
+                            {
+                                <div class="col-md-6 col-lg-4 mb-4">
+                                    <div class="card h-100 shadow-sm">
+                                        @if (!string.IsNullOrEmpty(vehicle.Images))
+                                        {
+                                            var firstImage = vehicle.Images.Split(',')[0].Trim();
+                                            <img src="@firstImage" class="card-img-top" alt="@vehicle.Name" 
+                                                 style="height: 200px; object-fit: cover;"
+                                                 onerror="this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                            <div class="card-img-top bg-light align-items-center justify-content-center" 
+                                                 style="height: 200px; display: none;">
+                                                <i class="bi bi-car-front fs-1 text-muted"></i>
+                                            </div>
+                                        }
+                                        else
+                                        {
+                                            <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
+                                                <i class="bi bi-car-front fs-1 text-muted"></i>
+                                            </div>
+                                        }
+                                        <div class="card-body">
+                                            <h5 class="card-title text-truncate">@vehicle.Name</h5>
+                                            <p class="card-text">
+                                                <span class="badge bg-secondary mb-2">@vehicle.Brand</span><br>
+                                                <strong>Model:</strong> @vehicle.Model<br>
+                                                <strong>Năm:</strong> @vehicle.Year<br>
+                                                <strong class="text-danger fs-5">@vehicle.Price.ToString("C0", new System.Globalization.CultureInfo("vi-VN"))</strong>
+                                            </p>
+                                        </div>
+                                        <div class="card-footer bg-transparent">
+                                            <div class="btn-group w-100" role="group">
+                                                <a asp-action="Details" asp-route-id="@vehicle.Id" class="btn btn-outline-primary">
+                                                    <i class="bi bi-eye me-1"></i>Chi tiết
+                                                </a>
+                                                @if (canManage)
+                                                {
+                                                    <a asp-action="Edit" asp-route-id="@vehicle.Id" class="btn btn-outline-warning">
+                                                        <i class="bi bi-pencil me-1"></i>Sửa
+                                                    </a>
+                                                    <a asp-action="Delete" asp-route-id="@vehicle.Id" class="btn btn-outline-danger">
+                                                        <i class="bi bi-trash me-1"></i>Xóa
+                                                    </a>
+                                                }
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="text-center py-5">
+                            <i class="bi bi-search fs-1 text-muted"></i>
+                            <h5 class="mt-2">Không tìm thấy xe nào</h5>
+                            <p class="text-muted">Thử thay đổi từ khóa tìm kiếm hoặc bộ lọc</p>
+                            @if (canManage)
+                            {
+                                <a asp-action="Create" class="btn btn-primary mt-2">
+                                    <i class="bi bi-plus-circle me-1"></i>Thêm xe mới
+                                </a>
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Auto-submit form when filter values change
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.querySelector('form');
+            const filterInputs = form.querySelectorAll('select[name="brandFilter"], select[name="sortBy"]');
+            
+            filterInputs.forEach(input => {
+                input.addEventListener('change', function() {
+                    form.submit();
+                });
+            });
+        });
+    </script>
+}

@@ -1,23 +1,30 @@
+using BusinessObjects.DTO;
 using BusinessObjects.Models;
 using Group03_MVC.Models;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Mvc;
 using Services;
-using System.Security.Claims;
+using Services.Service;
 
 namespace Group03_MVC.Controllers
 {
     public class AccountController : Controller
     {
-        private readonly IAccountService accountService;
+        private readonly IAccountService _accountService;
+
         public AccountController(IAccountService accountService)
         {
-            this.accountService = accountService;
+            _accountService = accountService;
         }
 
         [HttpGet]
         public IActionResult Login()
         {
+            // Check if user is already logged in
+            if (HttpContext.Session.GetString("UserId") != null)
+            {
+                return RedirectToAction("Index", "Home");
+            }
             return View(new LoginViewModel());
         }
 
@@ -25,80 +32,180 @@ namespace Group03_MVC.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Login(LoginViewModel model)
         {
-            if (!ModelState.IsValid)
+            try
             {
+                if (!ModelState.IsValid)
+                {
+                    return View(model);
+                }
+
+                User user = await _accountService.Login(model.Username, model.Password);
+                if (user != null)
+                {
+                    HttpContext.Session.SetString("UserId", user.Id.ToString());
+                    HttpContext.Session.SetString("FullName", user.FullName ?? "User");
+                    HttpContext.Session.SetString("Username", user.Username);
+                    HttpContext.Session.SetString("Role", user.Role);
+
+                    TempData["SuccessMessage"] = "Login successful!";
+                    return user.Role switch
+                    {
+                        "customer" => RedirectToAction("Index", "Home"),
+                        "admin" => RedirectToAction("Index", "Privacy"),
+                        "dealer_staff" or "dealer_manager" => RedirectToAction("Index", "Home"),
+                        "evm_staff" => RedirectToAction("Index", "Home"),
+                        _ => RedirectToAction("Index", "Home")
+                    };
+                }
+
+                ModelState.AddModelError(string.Empty, "Invalid username or password.");
                 return View(model);
             }
-
-            User user = await accountService.Login(model.Username, model.Password);
-
-            if (user != null)
+            catch (Exception ex)
             {
-                s
-
-                if (user.Role == "customer")
-                {
-                    return RedirectToAction("Index", "Home");
-                }
-                else if (user.Role == "admin")
-                {
-                    return RedirectToAction("Index", "Privacy");
-                }
-                else if (user.Role == "dealer_staff" || user.Role == "dealer_manager")
-                {
-                    return RedirectToAction("Index", "Home");
-                }
-                else if (user.Role == "evm_staff")
-                {
-                    return RedirectToAction("Index", "Home");
-                }
+                ModelState.AddModelError(string.Empty, "An error occurred during login. Please try again.");
+                return View(model);
             }
-            ModelState.AddModelError(string.Empty, "Invalid username or password.");
-            return View(model);
         }
 
         [HttpGet]
         public IActionResult Register()
         {
+            // Check if user is already logged in
+            if (HttpContext.Session.GetString("UserId") != null)
+            {
+                return RedirectToAction("Index", "Home");
+            }
             return View(new RegisterViewModel());
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Register(RegisterViewModel model)
         {
-            if (!ModelState.IsValid)
+            try
             {
+                if (!ModelState.IsValid)
+                {
+                    return View(model);
+                }
+
+                var user = new User
+                {
+                    Username = model.Username.Trim(),
+                    Password = model.Password,
+                    Email = model.Email.Trim(),
+                    FullName = model.FullName.Trim(),
+                    Phone = model.Phone?.Trim(),
+                    Role = "customer",
+                    CreatedAt = DateTime.UtcNow,
+                    IsActive = true
+                };
+
+                bool userExists = await _accountService.CheckUserExists(user.Username, user.Email);
+                if (userExists)
+                {
+                    ModelState.AddModelError(string.Empty, "Username or Email already exists.");
+                    return View(model);
+                }
+
+                bool result = await _accountService.Register(user);
+                if (!result)
+                {
+                    ModelState.AddModelError(string.Empty, "Registration failed. Please try again.");
+                    return View(model);
+                }
+
+                TempData["SuccessMessage"] = "Registration successful! Please login.";
+                return RedirectToAction("Login");
+            }
+            catch (Exception ex)
+            {
+                ModelState.AddModelError(string.Empty, "An error occurred during registration. Please try again.");
                 return View(model);
             }
+        }
 
-            var user = new User
+        [HttpGet]
+        public async Task<IActionResult> Profile()
+        {
+            try
             {
-                Username = model.Username,
-                Password = model.Password,
-                Email = model.Email,
-                FullName = model.FullName,
-                Phone = model.Phone,
-                Role = "customer", 
+                var userId = HttpContext.Session.GetString("UserId");
+                if (string.IsNullOrEmpty(userId))
+                {
+                    return RedirectToAction("Login");
+                }
 
-            };
+                var user = await _accountService.GetUserById(Guid.Parse(userId));
+                if (user == null)
+                {
+                    return NotFound();
+                }
 
-            bool userExists = await accountService.CheckUserExists(user.Username, user.Email);
-            if (userExists)
-            {
-                ModelState.AddModelError(string.Empty, "Username or Email already exists.");
-                return View(model);
+                var userDTO = new UserDTO
+                {
+                    Id = user.Id,
+                    Username = user.Username,
+                    Email = user.Email,
+                    FullName = user.FullName,
+                    Phone = user.Phone,
+                    Role = user.Role
+                };
+
+                return View(userDTO);
             }
-            accountService.Register(user);
+            catch (Exception ex)
+            {
+                TempData["ErrorMessage"] = "Error loading profile.";
+                return RedirectToAction("Index", "Home");
+            }
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> UpdateProfile(UserDTO userDTO)
+        {
+                try
+            {
+                if (!ModelState.IsValid)
+                {
+                    return View("Profile", userDTO);
+                }
+
+                var result = await _accountService.UpdateUser(userDTO);
+                if (result)
+                {
+                    HttpContext.Session.SetString("FullName", userDTO.FullName);
+                    TempData["SuccessMessage"] = "Profile updated successfully!";
+                }
+                else
+                {
+                    TempData["ErrorMessage"] = "Failed to update profile.";
+                }
+
+                return RedirectToAction("Profile");
+            }
+            catch (Exception ex)
+            {
+                TempData["ErrorMessage"] = "An error occurred while updating profile.";
+                return View("Profile", userDTO);
+            }
+        }
+
+        [HttpGet]
+        public IActionResult Logout()
+        {
+            HttpContext.Session.Clear();
             return RedirectToAction("Login");
         }
+
         [HttpPost]
-        public async Task<IActionResult> Logout()
+        [ValidateAntiForgeryToken]
+        public IActionResult LogoutPost()
         {
-            await HttpContext.SignOutAsync("LoginCookie");
-            return RedirectToAction("Login", "Account");
+            HttpContext.Session.Clear();
+            return RedirectToAction("Login");
         }
     }
 }
-
-
-
