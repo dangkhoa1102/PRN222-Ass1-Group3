@@ -27,7 +27,7 @@
                     <form asp-action="Edit" method="post" enctype="multipart/form-data" novalidate>
                         @Html.AntiForgeryToken()
                         <input type="hidden" asp-for="Id" />
-
+                        <input type="hidden" asp-for="Images" /> <!-- Thêm dòng này -->
                         <!-- Status Alert -->
                         <div class="alert alert-info d-flex align-items-center mb-4">
                             <i class="fas fa-info-circle me-2"></i>
@@ -175,6 +175,8 @@
     </div>
 </div>
 
+<!-- Giữ nguyên style và JavaScript đã sửa ở trên -->
+
 <style>
     .form-label.required::after {
         content: " *";
@@ -300,6 +302,7 @@
                     alert('Please select only image files');
                 }
             });
+            updateFileInput();  // Thêm dòng này để đồng bộ fileInput.files
         }
 
         function previewImage(file) {
@@ -325,6 +328,7 @@
             const index = Array.from(imagePreview.children).indexOf(col);
             selectedFiles.splice(index, 1);
             col.remove();
+            updateFileInput();  // Thêm dòng này để đồng bộ fileInput.files
         };
 
         window.removeCurrentImage = function(btn, imageUrl) {
@@ -334,9 +338,23 @@
                 hiddenInput.name = 'removedImages';
                 hiddenInput.value = imageUrl;
                 document.querySelector('form').appendChild(hiddenInput);
-                
+
                 btn.closest('.col-md-3').remove();
             }
         };
+
+        // Hàm mới để đồng bộ selectedFiles với fileInput.files
+        function updateFileInput() {
+            const dataTransfer = new DataTransfer();
+            selectedFiles.forEach(file => dataTransfer.items.add(file));
+            fileInput.files = dataTransfer.files;
+            console.log('Updated file input:', fileInput.files.length);  // Log để debug
+        }
+
+        // Form submission debug
+        document.querySelector('form').addEventListener('submit', function(e) {
+            console.log('Form submitting...');
+            console.log('Selected files:', fileInput.files.length);  // Log để debug số file khi submit
+        });
     });
 </script>

@@ -179,10 +179,14 @@ namespace Group03_MVC.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(VehicleDTO vehicle, List<IFormFile> imageFiles)
+        public async Task<IActionResult> Edit(VehicleDTO vehicle, List<IFormFile> imageFiles, List<string> removedImages)
         {
             try
             {
+                Console.WriteLine($"Received {imageFiles?.Count ?? 0} files");
+                Console.WriteLine($"Received {removedImages?.Count ?? 0} removed images");
+                Console.WriteLine($"vehicle.Images before processing: {vehicle.Images}");
+
                 ModelState.Remove("Images");
 
                 // Validate required fields
@@ -203,27 +207,44 @@ namespace Group03_MVC.Controllers
                     ModelState.AddModelError("Price", "Price must be greater than 0.");
                 }
 
-                // Handle image uploads
+                // Handle removed images
+                if (removedImages != null && removedImages.Any())
+                {
+                    var currentImages = string.IsNullOrEmpty(vehicle.Images) ? new List<string>() : vehicle.Images.Split(',').ToList();
+                    currentImages = currentImages.Except(removedImages).ToList();
+                    vehicle.Images = string.Join(",", currentImages);
+                }
+
+                // Handle new image uploads
                 if (imageFiles != null && imageFiles.Count > 0)
                 {
                     var imageUrls = await UploadImages(imageFiles);
-                    if (!string.IsNullOrEmpty(vehicle.Images))
+                    if (imageUrls.Any())
                     {
-                        vehicle.Images += "," + string.Join(",", imageUrls);
+                        if (!string.IsNullOrEmpty(vehicle.Images))
+                        {
+                            vehicle.Images += "," + string.Join(",", imageUrls);
+                        }
+                        else
+                        {
+                            vehicle.Images = string.Join(",", imageUrls);
+                        }
                     }
-                    else
-                    {
-                        vehicle.Images = string.Join(",", imageUrls);
-                    }
+                }
+                else if (string.IsNullOrEmpty(vehicle.Images))
+                {
+                    vehicle.Images = ""; // Đảm bảo không null, tương tự Create
                 }
 
                 if (!ModelState.IsValid)
                 {
+                    var errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage);
+                    Console.WriteLine("ModelState Errors: " + string.Join(", ", errors));
                     return View(vehicle);
                 }
 
                 var result = await _vehicleService.UpdateVehicle(vehicle);
-                
+
                 if (result)
                 {
                     TempData["SuccessMessage"] = "Vehicle updated successfully!";
@@ -237,6 +258,7 @@ namespace Group03_MVC.Controllers
             }
             catch (Exception ex)
             {
+                Console.WriteLine($"Error: {ex.Message}");
                 ModelState.AddModelError("", $"Error updating vehicle: {ex.Message}");
                 return View(vehicle);
             }
