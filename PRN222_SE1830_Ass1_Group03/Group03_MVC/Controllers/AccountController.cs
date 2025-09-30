@@ -1,7 +1,9 @@
 using BusinessObjects.Models;
 using Group03_MVC.Models;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Mvc;
 using Services;
+using System.Security.Claims;
 
 namespace Group03_MVC.Controllers
 {
@@ -21,16 +23,19 @@ namespace Group03_MVC.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult Login(LoginViewModel model)
+        public async Task<IActionResult> Login(LoginViewModel model)
         {
             if (!ModelState.IsValid)
             {
                 return View(model);
             }
 
-            User user = accountService.Login(model.Username, model.Password).Result;
-            if(user != null)
+            User user = await accountService.Login(model.Username, model.Password);
+
+            if (user != null)
             {
+                s
+
                 if (user.Role == "customer")
                 {
                     return RedirectToAction("Index", "Home");
@@ -77,12 +82,6 @@ namespace Group03_MVC.Controllers
 
             };
 
-            Console.WriteLine("USERNAME: "+ model.Username);
-            Console.WriteLine("EMAIL: " + model.Email);
-            Console.WriteLine("PASSWORD: " + model.Password);
-            Console.WriteLine("FULLNAME: " + model.FullName);
-            Console.WriteLine("PHONE: " + model.Phone);
-
             bool userExists = await accountService.CheckUserExists(user.Username, user.Email);
             if (userExists)
             {
@@ -91,6 +90,12 @@ namespace Group03_MVC.Controllers
             }
             accountService.Register(user);
             return RedirectToAction("Login");
+        }
+        [HttpPost]
+        public async Task<IActionResult> Logout()
+        {
+            await HttpContext.SignOutAsync("LoginCookie");
+            return RedirectToAction("Login", "Account");
         }
     }
 }
