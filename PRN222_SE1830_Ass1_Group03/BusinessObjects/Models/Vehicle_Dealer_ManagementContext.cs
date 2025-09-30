@@ -2,10 +2,9 @@
 #nullable disable
 using System;
 using System.Collections.Generic;
-using BusinessObjects.Models;
 using Microsoft.EntityFrameworkCore;
 
-namespace DataAccessLayer;
+namespace BusinessObjects.Models;
 
 public partial class Vehicle_Dealer_ManagementContext : DbContext
 {
