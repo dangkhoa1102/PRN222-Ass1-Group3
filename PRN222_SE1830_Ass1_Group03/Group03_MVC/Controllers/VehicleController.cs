@@ -301,7 +301,7 @@ namespace Group03_MVC.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         [RoleAuthorization("evm_staff", "dealer_manager")]
-        public async Task<IActionResult> Edit(VehicleDTO vehicle, List<IFormFile> imageFiles)
+        public async Task<IActionResult> Edit(VehicleDTO vehicle, List<IFormFile> imageFiles, List<string> removedImages)
         {
             try
             {
@@ -325,24 +325,90 @@ namespace Group03_MVC.Controllers
                     ModelState.AddModelError("Price", "Price must be greater than 0.");
                 }
 
-                // Handle image uploads
-                if (imageFiles != null && imageFiles.Count > 0)
+                // Additional validations
+                if (vehicle.Year.HasValue && (vehicle.Year < 1900 || vehicle.Year > DateTime.Now.Year + 1))
                 {
-                    var imageUrls = await UploadImages(imageFiles);
-                    if (!string.IsNullOrEmpty(vehicle.Images))
+                    ModelState.AddModelError("Year", "Please enter a valid year.");
+                }
+                
+                if (vehicle.StockQuantity.HasValue && vehicle.StockQuantity < 0)
+                {
+                    ModelState.AddModelError("StockQuantity", "Stock quantity cannot be negative.");
+                }
+
+                // Get existing vehicle to preserve current images
+                var existingVehicle = await _vehicleService.GetVehicleById(vehicle.Id);
+                if (existingVehicle == null)
+                {
+                    return NotFound();
+                }
+
+                // Start with existing images
+                var currentImages = new List<string>();
+                if (!string.IsNullOrEmpty(existingVehicle.Images))
+                {
+                    currentImages = existingVehicle.Images.Split(',', StringSplitOptions.RemoveEmptyEntries)
+                                                         .Select(img => img.Trim())
+                                                         .Where(img => !string.IsNullOrEmpty(img))
+                                                         .ToList();
+                }
+
+                // Remove deleted images
+                if (removedImages != null && removedImages.Any())
+                {
+                    foreach (var removedImage in removedImages)
                     {
-                        vehicle.Images += "," + string.Join(",", imageUrls);
-                    }
-                    else
-                    {
-                        vehicle.Images = string.Join(",", imageUrls);
+                        var trimmedRemovedImage = removedImage.Trim();
+                        currentImages.RemoveAll(img => img.Equals(trimmedRemovedImage, StringComparison.OrdinalIgnoreCase));
+                        
+                        // Delete physical file
+                        try
+                        {
+                            var fileName = Path.GetFileName(trimmedRemovedImage);
+                            var filePath = Path.Combine(_webHostEnvironment.WebRootPath, "images", "vehicles", fileName);
+                            if (System.IO.File.Exists(filePath))
+                            {
+                                System.IO.File.Delete(filePath);
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            // Log error but don't fail the update
+                            Console.WriteLine($"Error deleting image file: {ex.Message}");
+                        }
                     }
                 }
+
+                // Handle new image uploads
+                if (imageFiles != null && imageFiles.Count > 0)
+                {
+                    try
+                    {
+                        var newImageUrls = await UploadImages(imageFiles);
+                        currentImages.AddRange(newImageUrls);
+                    }
+                    catch (Exception imgEx)
+                    {
+                        ModelState.AddModelError("", $"Error uploading images: {imgEx.Message}");
+                        return View(vehicle);
+                    }
+                }
+
+                // Update vehicle with all images
+                vehicle.Images = string.Join(",", currentImages.Where(img => !string.IsNullOrEmpty(img)));
 
                 if (!ModelState.IsValid)
                 {
                     return View(vehicle);
                 }
+
+                // Clean up data before update
+                vehicle.Name = vehicle.Name?.Trim();
+                vehicle.Brand = vehicle.Brand?.Trim();
+                vehicle.Model = vehicle.Model?.Trim();
+                vehicle.Description = vehicle.Description?.Trim() ?? "";
+                vehicle.Specifications = vehicle.Specifications?.Trim() ?? "";
+                vehicle.StockQuantity ??= 0;
 
                 var result = await _vehicleService.UpdateVehicle(vehicle);
                 
@@ -359,6 +425,7 @@ namespace Group03_MVC.Controllers
             }
             catch (Exception ex)
             {
+                Console.WriteLine($"Edit Vehicle Error: {ex}");
                 ModelState.AddModelError("", $"Error updating vehicle: {ex.Message}");
                 return View(vehicle);
             }
@@ -432,35 +499,59 @@ namespace Group03_MVC.Controllers
             var imageUrls = new List<string>();
             var uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "images", "vehicles");
             
+            Console.WriteLine($"Upload folder: {uploadsFolder}");
+            Console.WriteLine($"Files to upload: {imageFiles?.Count ?? 0}");
+            
             if (!Directory.Exists(uploadsFolder))
             {
                 Directory.CreateDirectory(uploadsFolder);
+                Console.WriteLine("Created upload directory");
+            }
+
+            if (imageFiles == null || imageFiles.Count == 0)
+            {
+                Console.WriteLine("No files to upload");
+                return imageUrls;
             }
 
             foreach (var file in imageFiles)
             {
                 if (file != null && file.Length > 0)
                 {
+                    Console.WriteLine($"Processing file: {file.FileName}, Size: {file.Length}");
+                    
                     var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif", ".webp" };
                     var fileExtension = Path.GetExtension(file.FileName).ToLowerInvariant();
                     
                     if (!allowedExtensions.Contains(fileExtension))
                     {
+                        Console.WriteLine($"Skipping file with invalid extension: {fileExtension}");
                         continue;
                     }
 
                     var fileName = Guid.NewGuid().ToString() + fileExtension;
                     var filePath = Path.Combine(uploadsFolder, fileName);
 
-                    using (var stream = new FileStream(filePath, FileMode.Create))
+                    try
                     {
-                        await file.CopyToAsync(stream);
-                    }
+                        using (var stream = new FileStream(filePath, FileMode.Create))
+                        {
+                            await file.CopyToAsync(stream);
+                        }
 
-                    imageUrls.Add($"/images/vehicles/{fileName}");
+                        var imageUrl = $"/images/vehicles/{fileName}";
+                        imageUrls.Add(imageUrl);
+                        Console.WriteLine($"Successfully uploaded: {imageUrl}");
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"Error uploading file {file.FileName}: {ex.Message}");
+                        throw;
+                    }
                 }
             }
 
+            Console.WriteLine($"Total images uploaded: {imageUrls.Count}");
             return imageUrls;
         }
     }
