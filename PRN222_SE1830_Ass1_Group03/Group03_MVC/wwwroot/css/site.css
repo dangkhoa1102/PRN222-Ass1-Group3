@@ -600,3 +600,150 @@ input[type="number"]::-webkit-inner-spin-button {
         margin-bottom: 0;
     }
 }
+
+/* ===== IMAGE UPLOAD ENHANCEMENTS ===== */
+.upload-container {
+    border: 1px solid var(--gray-200);
+    border-radius: var(--border-radius);
+    padding: 1rem;
+    background-color: var(--gray-50);
+}
+
+.upload-area {
+    border: 2px dashed var(--primary);
+    border-radius: var(--border-radius);
+    padding: 2rem;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background-color: var(--white);
+    position: relative;
+}
+
+.upload-area:hover {
+    border-color: var(--primary-hover);
+    background-color: var(--gray-50);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow);
+}
+
+.upload-area.dragover {
+    border-color: var(--primary-hover);
+    background-color: rgba(37, 99, 235, 0.1);
+    transform: scale(1.02);
+    box-shadow: var(--shadow-lg);
+}
+
+.upload-content {
+    pointer-events: none;
+}
+
+.image-preview-container {
+    position: relative;
+    overflow: hidden;
+    border-radius: var(--border-radius);
+    transition: transform 0.2s ease;
+}
+
+.image-preview-container:hover {
+    transform: scale(1.02);
+}
+
+.image-preview-container .btn-danger {
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+.image-preview-container:hover .btn-danger {
+    opacity: 1;
+}
+
+/* Image loading states */
+.img-thumbnail {
+    transition: opacity 0.3s ease;
+}
+
+.img-thumbnail[src=""] {
+    opacity: 0.5;
+    background: var(--gray-100);
+}
+
+/* Progress indicator for uploads */
+.upload-progress {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: var(--gray-200);
+    border-radius: 0 0 var(--border-radius) var(--border-radius);
+    overflow: hidden;
+}
+
+.upload-progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, var(--primary), var(--info));
+    width: 0%;
+    transition: width 0.3s ease;
+}
+
+/* File type indicators */
+.file-type-badge {
+    position: absolute;
+    top: 0.5rem;
+    left: 0.5rem;
+    z-index: 10;
+}
+
+/* Error states */
+.upload-error {
+    border-color: var(--danger) !important;
+    background-color: rgba(239, 68, 68, 0.1);
+}
+
+.upload-error .upload-content {
+    color: var(--danger);
+}
+
+/* Success states */
+.upload-success {
+    border-color: var(--success) !important;
+    background-color: rgba(16, 185, 129, 0.1);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .upload-area {
+        padding: 1.5rem 1rem;
+    }
+    
+    .upload-area .fs-1 {
+        font-size: 2rem !important;
+    }
+    
+    .image-preview-container {
+        margin-bottom: 1rem;
+    }
+}
+
+/* Animation for image removal */
+.removing {
+    opacity: 0;
+    transform: scale(0.8);
+    transition: all 0.3s ease;
+}
+
+/* Loading spinner for image uploads */
+.upload-spinner {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 100;
+}
+
+.upload-spinner .spinner {
+    width: 2rem;
+    height: 2rem;
+    border-width: 3px;
+}
