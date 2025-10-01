@@ -27,40 +27,41 @@ namespace Services.Service
             _vehicleRepo = vehicleRepo;
         }
 
-        public async Task<bool> AddVehicle(VehicleDTO vehicle)
+        public async Task<bool> AddVehicle(VehicleDTO vehicleDTO)
         {
             try
             {
-                if (vehicle == null)
+                if (vehicleDTO == null)
                 {
-                    throw new ArgumentNullException(nameof(vehicle), "VehicleDTO cannot be null.");
+                    throw new ArgumentNullException(nameof(vehicleDTO), "VehicleDTO cannot be null.");
                 }
 
-                var x = new Vehicle
+                // Validate DTO
+                ValidateVehicleDTO(vehicleDTO);
+
+                var vehicle = new Vehicle
                 {
                     Id = Guid.NewGuid(),
-                    Name = vehicle.Name,
-                    Brand = vehicle.Brand,
-                    Model = vehicle.Model,
-                    Year = vehicle.Year,
-                    Price = vehicle.Price,
-                    Description = vehicle.Description,
-                    Specifications = vehicle.Specifications,
-                    Images = vehicle.Images ?? "",
-                    StockQuantity = vehicle.StockQuantity,
-                    CreatedAt = DateTime.Now,
+                    Name = vehicleDTO.Name?.Trim(),
+                    Brand = vehicleDTO.Brand?.Trim(),
+                    Model = vehicleDTO.Model?.Trim(),
+                    Year = vehicleDTO.Year,
+                    Price = vehicleDTO.Price,
+                    Description = vehicleDTO.Description?.Trim() ?? "",
+                    Specifications = vehicleDTO.Specifications?.Trim() ?? "",
+                    Images = vehicleDTO.Images?.Trim() ?? "",
+                    StockQuantity = vehicleDTO.StockQuantity ?? 0,
+                    CreatedAt = DateTime.UtcNow,
                     IsActive = true
                 };
 
-                if (await _vehicleRepo.Add(x))
-                {
-                    return true;
-                }
-                return false;
+                return await _vehicleRepo.Add(vehicle);
             }
             catch (Exception ex)
             {
-                throw new Exception("VehicleService ERROR: " + ex.Message, ex);
+                // Log the actual exception for debugging
+                Console.WriteLine($"VehicleService AddVehicle Error: {ex}");
+                throw new Exception($"VehicleService ERROR: {ex.Message}", ex);
             }
         }
 
@@ -68,15 +69,16 @@ namespace Services.Service
         {
             try
             {
-                if (await _vehicleRepo.Delete(id))
+                if (id == Guid.Empty)
                 {
-                    return true;
+                    throw new ArgumentException("Invalid vehicle ID");
                 }
-                return false;
+
+                return await _vehicleRepo.Delete(id);
             }
             catch (Exception ex)
             {
-                throw new Exception("VehicleService ERROR: " + ex.Message, ex);
+                throw new Exception($"VehicleService ERROR: {ex.Message}", ex);
             }
         }
 
@@ -88,7 +90,7 @@ namespace Services.Service
             }
             catch (Exception ex)
             {
-                throw new Exception("VehicleService ERROR: " + ex.Message, ex);
+                throw new Exception($"VehicleService ERROR: {ex.Message}", ex);
             }
         }
 
@@ -96,55 +98,92 @@ namespace Services.Service
         {
             try
             {
-                var x = await _vehicleRepo.GetById(id);
-                if (x == null)
+                if (id == Guid.Empty)
                 {
-                    throw new KeyNotFoundException("Product not found");
+                    throw new ArgumentException("Invalid vehicle ID");
                 }
-                return x;
+
+                var vehicle = await _vehicleRepo.GetById(id);
+                if (vehicle == null)
+                {
+                    throw new KeyNotFoundException("Vehicle not found");
+                }
+                return vehicle;
             }
             catch (Exception ex)
             {
-                throw new Exception("VehicleService ERROR: " + ex.Message, ex);
+                throw new Exception($"VehicleService ERROR: {ex.Message}", ex);
             }
         }
 
-        public async Task<bool> UpdateVehicle(VehicleDTO vehicle)
+        public async Task<bool> UpdateVehicle(VehicleDTO vehicleDTO)
         {
             try
             {
-                if (vehicle == null)
+                if (vehicleDTO == null)
                 {
-                    throw new ArgumentNullException(nameof(vehicle), "VehicleDTO cannot be null.");
+                    throw new ArgumentNullException(nameof(vehicleDTO), "VehicleDTO cannot be null.");
                 }
 
-                var product = await _vehicleRepo.GetById(vehicle.Id);
-                if (product == null)
+                if (vehicleDTO.Id == Guid.Empty)
                 {
-                    throw new KeyNotFoundException("Product not found");
+                    throw new ArgumentException("Invalid vehicle ID");
                 }
 
-                product.Id = vehicle.Id;
-                product.Name = vehicle.Name;
-                product.Brand = vehicle.Brand;
-                product.Model = vehicle.Model;
-                product.Year = vehicle.Year;
-                product.Price = vehicle.Price;
-                product.Description = vehicle.Description;
-                product.Specifications = vehicle.Specifications;
-                product.Images = vehicle.Images ?? "";
-                product.StockQuantity = vehicle.StockQuantity;
-                product.IsActive = true;
+                // Validate DTO
+                ValidateVehicleDTO(vehicleDTO);
 
-                if (await _vehicleRepo.UpdateAsync(product))
+                var existingVehicle = await _vehicleRepo.GetById(vehicleDTO.Id);
+                if (existingVehicle == null)
                 {
-                    return true;
+                    throw new KeyNotFoundException("Vehicle not found");
                 }
-                return false;
+
+                // Update vehicle properties
+                existingVehicle.Name = vehicleDTO.Name?.Trim();
+                existingVehicle.Brand = vehicleDTO.Brand?.Trim();
+                existingVehicle.Model = vehicleDTO.Model?.Trim();
+                existingVehicle.Year = vehicleDTO.Year;
+                existingVehicle.Price = vehicleDTO.Price;
+                existingVehicle.Description = vehicleDTO.Description?.Trim() ?? "";
+                existingVehicle.Specifications = vehicleDTO.Specifications?.Trim() ?? "";
+                existingVehicle.Images = vehicleDTO.Images?.Trim() ?? "";
+                existingVehicle.StockQuantity = vehicleDTO.StockQuantity ?? 0;
+                existingVehicle.IsActive = true;
+
+                return await _vehicleRepo.UpdateAsync(existingVehicle);
             }
             catch (Exception ex)
             {
-                throw new Exception("VehicleService ERROR: " + ex.Message, ex);
+                throw new Exception($"VehicleService ERROR: {ex.Message}", ex);
+            }
+        }
+
+        private void ValidateVehicleDTO(VehicleDTO vehicleDTO)
+        {
+            var errors = new List<string>();
+
+            if (string.IsNullOrWhiteSpace(vehicleDTO.Name))
+                errors.Add("Vehicle name is required");
+
+            if (string.IsNullOrWhiteSpace(vehicleDTO.Brand))
+                errors.Add("Vehicle brand is required");
+
+            if (string.IsNullOrWhiteSpace(vehicleDTO.Model))
+                errors.Add("Vehicle model is required");
+
+            if (vehicleDTO.Price <= 0)
+                errors.Add("Vehicle price must be greater than 0");
+
+            if (vehicleDTO.Year.HasValue && (vehicleDTO.Year < 1900 || vehicleDTO.Year > DateTime.Now.Year + 1))
+                errors.Add("Invalid vehicle year");
+
+            if (vehicleDTO.StockQuantity.HasValue && vehicleDTO.StockQuantity < 0)
+                errors.Add("Stock quantity cannot be negative");
+
+            if (errors.Any())
+            {
+                throw new ArgumentException($"Validation failed: {string.Join(", ", errors)}");
             }
         }
     }

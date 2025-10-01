@@ -11,11 +11,11 @@
             <!-- Header -->
             <div class="d-flex align-items-center mb-4">
                 <a asp-action="Index" class="btn btn-outline-secondary me-3">
-                    <i class="fas fa-arrow-left"></i>
+                    <i class="bi bi-arrow-left"></i>
                 </a>
                 <div>
                     <h2 class="text-primary mb-0">
-                        <i class="fas fa-edit me-2"></i>Edit Vehicle
+                        <i class="bi bi-pencil-square me-2"></i>Edit Vehicle
                     </h2>
                     <p class="text-muted mb-0">Update vehicle information</p>
                 </div>
@@ -30,13 +30,22 @@
                         <input type="hidden" asp-for="Images" /> <!-- Thêm dòng này -->
                         <!-- Status Alert -->
                         <div class="alert alert-info d-flex align-items-center mb-4">
-                            <i class="fas fa-info-circle me-2"></i>
+                            <i class="bi bi-info-circle me-2"></i>
                             <div>
                                 <strong>Editing Vehicle:</strong> @Model.Name
                                 <br>
                                 <small class="text-muted">Vehicle ID: @Model.Id</small>
                             </div>
                         </div>
+
+                        <!-- Validation Summary -->
+                        @if (!ViewData.ModelState.IsValid)
+                        {
+                            <div class="alert alert-danger">
+                                <h6><i class="bi bi-exclamation-triangle me-2"></i>Please fix the following errors:</h6>
+                                <div asp-validation-summary="All" class="text-danger"></div>
+                            </div>
+                        }
 
                         <!-- Basic Information Section -->
                         <div class="row mb-4">
@@ -64,24 +73,24 @@
                         </div>
 
                         <div class="row mb-4">
-                            <div class="col-md-3">
+                            <div class="col-md-4">
                                 <div class="form-group mb-3">
                                     <label asp-for="Year" class="form-label">Year</label>
-                                    <input asp-for="Year" type="number" class="form-control" min="1900" max="2025">
+                                    <input asp-for="Year" type="number" class="form-control" min="1900" max="@(DateTime.Now.Year + 1)">
                                     <span asp-validation-for="Year" class="text-danger small"></span>
                                 </div>
                             </div>
                             <div class="col-md-4">
                                 <div class="form-group mb-3">
-                                    <label asp-for="Price" class="form-label required">Price</label>
-                                    <div class="input-group">
-                                        <span class="input-group-text">$</span>
-                                        <input asp-for="Price" type="number" class="form-control" step="0.01" min="0">
+                                    <label asp-for="Price" class="form-label required">Price (VND)</label>
+                                    <div class="currency-input">
+                                        <span class="currency-symbol">₫</span>
+                                        <input asp-for="Price" type="number" class="form-control" step="1000" min="0">
                                     </div>
                                     <span asp-validation-for="Price" class="text-danger small"></span>
                                 </div>
                             </div>
-                            <div class="col-md-3">
+                            <div class="col-md-4">
                                 <div class="form-group mb-3">
                                     <label asp-for="StockQuantity" class="form-label">Stock Quantity</label>
                                     <input asp-for="StockQuantity" type="number" class="form-control" min="0">
@@ -94,7 +103,7 @@
                             <div class="col-12">
                                 <div class="form-group mb-3">
                                     <label asp-for="Description" class="form-label">Description</label>
-                                    <textarea asp-for="Description" class="form-control" rows="4"></textarea>
+                                    <textarea asp-for="Description" class="form-control" rows="4" placeholder="Enter vehicle description..."></textarea>
                                     <span asp-validation-for="Description" class="text-danger small"></span>
                                 </div>
                             </div>
@@ -104,7 +113,7 @@
                             <div class="col-12">
                                 <div class="form-group mb-3">
                                     <label asp-for="Specifications" class="form-label">Specifications</label>
-                                    <textarea asp-for="Specifications" class="form-control" rows="6"></textarea>
+                                    <textarea asp-for="Specifications" class="form-control" rows="6" placeholder="Enter vehicle specifications..."></textarea>
                                     <span asp-validation-for="Specifications" class="text-danger small"></span>
                                 </div>
                             </div>
@@ -115,19 +124,23 @@
                         {
                             <div class="mb-4">
                                 <h6 class="fw-bold">
-                                    <i class="fas fa-images me-2"></i>Current Images
+                                    <i class="bi bi-images me-2"></i>Current Images
                                 </h6>
-                                <div class="row">
+                                <div class="row" id="currentImagesContainer">
                                     @foreach (var image in Model.Images.Split(','))
                                     {
-                                        <div class="col-md-3 mb-2">
-                                            <div class="position-relative">
-                                                <img src="@image.Trim()" class="img-thumbnail" style="height: 100px; width: 100%; object-fit: cover;" alt="Vehicle Image">
-                                                <button type="button" class="btn btn-sm btn-danger position-absolute top-0 end-0" onclick="removeCurrentImage(this, '@image.Trim()')">
-                                                    <i class="fas fa-times"></i>
-                                                </button>
+                                        var trimmedImage = image.Trim();
+                                        if (!string.IsNullOrEmpty(trimmedImage))
+                                        {
+                                            <div class="col-md-3 mb-2" data-image="@trimmedImage">
+                                                <div class="position-relative image-container">
+                                                    <img src="@trimmedImage" class="img-thumbnail" style="height: 150px; width: 100%; object-fit: cover;" alt="Vehicle Image">
+                                                    <button type="button" class="btn btn-sm btn-danger position-absolute top-0 end-0 m-1" onclick="removeCurrentImage(this, '@trimmedImage')">
+                                                        <i class="bi bi-x"></i>
+                                                    </button>
+                                                </div>
                                             </div>
-                                        </div>
+                                        }
                                     }
                                 </div>
                             </div>
@@ -136,35 +149,38 @@
                         <!-- Upload New Images -->
                         <div class="form-group mb-4">
                             <label class="form-label fw-bold">
-                                <i class="fas fa-plus me-2"></i>Add New Images
+                                <i class="bi bi-plus-circle me-2"></i>Add New Images
                             </label>
                             <div class="upload-container">
                                 <div class="upload-area" id="uploadArea">
                                     <div class="upload-content">
-                                        <i class="fas fa-cloud-upload-alt fa-3x text-primary mb-3"></i>
+                                        <i class="bi bi-cloud-upload fs-1 text-primary mb-3"></i>
                                         <h6 class="text-primary mb-2">Upload Additional Images</h6>
                                         <p class="mb-2">Drag and drop new images here or click to browse</p>
                                         <p class="text-muted small mb-3">Supported formats: JPG, PNG, GIF, WebP (Max 5MB each)</p>
                                         <button type="button" class="btn btn-outline-primary btn-sm">
-                                            <i class="fas fa-plus me-2"></i>Choose Files
+                                            <i class="bi bi-plus me-2"></i>Choose Files
                                         </button>
                                     </div>
-                                    <input type="file" id="imageFiles" name="imageFiles" class="form-control" multiple accept="image/*" style="display: none;">
                                 </div>
+                                <input type="file" id="imageFiles" name="imageFiles" class="form-control" multiple accept="image/*" style="display: none;">
                                 <div id="imagePreview" class="row mt-3"></div>
                             </div>
                         </div>
+
+                        <!-- Hidden inputs for removed images -->
+                        <div id="removedImagesContainer"></div>
 
                         <!-- Action Buttons -->
                         <div class="d-flex justify-content-between mt-5 pt-3" style="border-top: 1px solid #dee2e6;">
                             <div>
                                 <a asp-action="Index" class="btn btn-secondary btn-lg me-2">
-                                    <i class="fas fa-times me-2"></i>Cancel
+                                    <i class="bi bi-x-circle me-2"></i>Cancel
                                 </a>
                             </div>
                             <div>
-                                <button type="submit" class="btn btn-warning btn-lg">
-                                    <i class="fas fa-save me-2"></i>Update Vehicle
+                                <button type="submit" class="btn btn-warning btn-lg" id="updateBtn">
+                                    <i class="bi bi-check-circle me-2"></i>Update Vehicle
                                 </button>
                             </div>
                         </div>
@@ -175,186 +191,243 @@
     </div>
 </div>
 
-<!-- Giữ nguyên style và JavaScript đã sửa ở trên -->
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const uploadArea = document.getElementById('uploadArea');
+            const fileInput = document.getElementById('imageFiles');
+            const imagePreview = document.getElementById('imagePreview');
+            const removedImagesContainer = document.getElementById('removedImagesContainer');
+            const updateBtn = document.getElementById('updateBtn');
+            const maxFiles = 10;
+            let selectedFiles = [];
+            let removedImages = [];
 
-<style>
-    .form-label.required::after {
-        content: " *";
-        color: #dc3545;
-    }
+            console.log('Edit Vehicle Script Loaded');
 
-    .form-control:focus {
-        border-color: #007bff;
-        box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
-    }
-
-    .alert-info {
-        border-left: 4px solid #0dcaf0;
-    }
-    
-    .upload-container {
-        border: 1px solid #dee2e6;
-        border-radius: 8px;
-        padding: 1rem;
-        background-color: #f8f9fa;
-    }
-    
-    .upload-area {
-        border: 2px dashed #0d6efd;
-        border-radius: 8px;
-        padding: 2rem;
-        text-align: center;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        background-color: white;
-    }
-    
-    .upload-area:hover {
-        border-color: #0b5ed7;
-        background-color: #f8f9fa;
-        transform: translateY(-2px);
-        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-    }
-    
-    .upload-area.dragover {
-        border-color: #0b5ed7;
-        background-color: #e3f2fd;
-        transform: scale(1.02);
-    }
-    
-    .image-preview-item {
-        position: relative;
-        margin-bottom: 1rem;
-    }
-    
-    .image-preview-item img {
-        width: 100%;
-        height: 100px;
-        object-fit: cover;
-        border-radius: 8px;
-        border: 2px solid #dee2e6;
-    }
-    
-    .image-preview-item .remove-btn {
-        position: absolute;
-        top: 5px;
-        right: 5px;
-        background: rgba(220, 53, 69, 0.9);
-        color: white;
-        border: none;
-        border-radius: 50%;
-        width: 25px;
-        height: 25px;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-</style>
-
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const uploadArea = document.getElementById('uploadArea');
-        const fileInput = document.getElementById('imageFiles');
-        const imagePreview = document.getElementById('imagePreview');
-        const maxFiles = 5;
-        let selectedFiles = [];
-
-        // Click to upload
-        uploadArea.addEventListener('click', (e) => {
-            e.preventDefault();
-            fileInput.click();
-        });
-
-        // Drag and drop
-        uploadArea.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            uploadArea.classList.add('dragover');
-        });
-
-        uploadArea.addEventListener('dragleave', (e) => {
-            e.preventDefault();
-            uploadArea.classList.remove('dragover');
-        });
-
-        uploadArea.addEventListener('drop', (e) => {
-            e.preventDefault();
-            uploadArea.classList.remove('dragover');
-            handleFiles(e.dataTransfer.files);
-        });
-
-        // File input change
-        fileInput.addEventListener('change', (e) => {
-            handleFiles(e.target.files);
-        });
-
-        function handleFiles(files) {
-            Array.from(files).forEach(file => {
-                if (selectedFiles.length >= maxFiles) {
-                    alert(`Maximum ${maxFiles} images allowed`);
-                    return;
-                }
-
-                if (file.type.startsWith('image/')) {
-                    selectedFiles.push(file);
-                    previewImage(file);
-                } else {
-                    alert('Please select only image files');
-                }
+            // Click to upload
+            uploadArea.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                fileInput.click();
             });
-            updateFileInput();  // Thêm dòng này để đồng bộ fileInput.files
-        }
 
-        function previewImage(file) {
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                const col = document.createElement('div');
-                col.className = 'col-md-3';
-                col.innerHTML = `
-                    <div class="image-preview-item">
-                        <img src="${e.target.result}" alt="Preview">
-                        <button type="button" class="remove-btn" onclick="removeImage(this)">
-                            <i class="fas fa-times"></i>
-                        </button>
-                    </div>
-                `;
-                imagePreview.appendChild(col);
-            };
-            reader.readAsDataURL(file);
-        }
+            // Drag and drop events
+            uploadArea.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                uploadArea.classList.add('dragover');
+            });
 
-        window.removeImage = function(btn) {
-            const col = btn.closest('.col-md-3');
-            const index = Array.from(imagePreview.children).indexOf(col);
-            selectedFiles.splice(index, 1);
-            col.remove();
-            updateFileInput();  // Thêm dòng này để đồng bộ fileInput.files
-        };
+            uploadArea.addEventListener('dragleave', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                uploadArea.classList.remove('dragover');
+            });
 
-        window.removeCurrentImage = function(btn, imageUrl) {
-            if (confirm('Are you sure you want to remove this image?')) {
-                const hiddenInput = document.createElement('input');
-                hiddenInput.type = 'hidden';
-                hiddenInput.name = 'removedImages';
-                hiddenInput.value = imageUrl;
-                document.querySelector('form').appendChild(hiddenInput);
+            uploadArea.addEventListener('drop', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                uploadArea.classList.remove('dragover');
+                handleFiles(e.dataTransfer.files);
+            });
 
-                btn.closest('.col-md-3').remove();
+            // File input change
+            fileInput.addEventListener('change', (e) => {
+                console.log('Files selected:', e.target.files.length);
+                handleFiles(e.target.files);
+            });
+
+            function handleFiles(files) {
+                console.log('Handling files:', files.length);
+                
+                Array.from(files).forEach((file, index) => {
+                    if (selectedFiles.length >= maxFiles) {
+                        alert(`Maximum ${maxFiles} images allowed in total`);
+                        return;
+                    }
+
+                    if (file.type.startsWith('image/')) {
+                        if (file.size > 5 * 1024 * 1024) { // 5MB limit
+                            alert(`File ${file.name} is too large. Maximum size is 5MB.`);
+                            return;
+                        }
+                        
+                        console.log('Adding file:', file.name);
+                        selectedFiles.push(file);
+                        previewImage(file, selectedFiles.length - 1);
+                    } else {
+                        alert('Please select only image files');
+                    }
+                });
+                
+                updateFileInput();
             }
-        };
 
-        // Hàm mới để đồng bộ selectedFiles với fileInput.files
-        function updateFileInput() {
-            const dataTransfer = new DataTransfer();
-            selectedFiles.forEach(file => dataTransfer.items.add(file));
-            fileInput.files = dataTransfer.files;
-            console.log('Updated file input:', fileInput.files.length);  // Log để debug
+            function updateFileInput() {
+                console.log('Updating file input with files:', selectedFiles.length);
+                const dt = new DataTransfer();
+                selectedFiles.forEach(file => {
+                    if (file) dt.items.add(file);
+                });
+                fileInput.files = dt.files;
+            }
+
+            function previewImage(file, index) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const col = document.createElement('div');
+                    col.className = 'col-md-3 mb-2';
+                    col.setAttribute('data-file-index', index);
+                    col.innerHTML = `
+                        <div class="position-relative image-container">
+                            <img src="${e.target.result}" class="img-thumbnail" style="height: 150px; width: 100%; object-fit: cover;" alt="Preview">
+                            <button type="button" class="btn btn-sm btn-danger position-absolute top-0 end-0 m-1" onclick="removeNewImage(this, ${index})">
+                                <i class="bi bi-x"></i>
+                            </button>
+                            <div class="position-absolute bottom-0 start-0 m-1">
+                                <span class="badge bg-success">New</span>
+                            </div>
+                        </div>
+                    `;
+                    imagePreview.appendChild(col);
+                    console.log('Preview added for file:', file.name);
+                };
+                reader.readAsDataURL(file);
+            }
+
+            // Remove new image
+            window.removeNewImage = function(btn, index) {
+                console.log('Removing new image at index:', index);
+                const col = btn.closest('.col-md-3');
+                col.remove();
+                
+                // Remove from selectedFiles array
+                selectedFiles[index] = null; // Mark as removed but keep index
+                
+                updateFileInput();
+            };
+
+            // Remove current image
+            window.removeCurrentImage = function(btn, imageUrl) {
+                console.log('Removing current image:', imageUrl);
+                if (confirm('Are you sure you want to remove this image?')) {
+                    // Add to removed images list
+                    removedImages.push(imageUrl);
+                    
+                    // Create hidden input for removed image
+                    const hiddenInput = document.createElement('input');
+                    hiddenInput.type = 'hidden';
+                    hiddenInput.name = 'removedImages';
+                    hiddenInput.value = imageUrl;
+                    removedImagesContainer.appendChild(hiddenInput);
+                    
+                    // Remove from DOM
+                    const col = btn.closest('.col-md-3');
+                    col.classList.add('removing');
+                    
+                    setTimeout(() => {
+                        col.remove();
+                    }, 300);
+                    
+                    console.log('Current image removed:', imageUrl);
+                }
+            };
+
+            // Form submission validation
+            const form = document.querySelector('form');
+            form.addEventListener('submit', function(e) {
+                console.log('Form submitting...');
+                console.log('Selected files:', selectedFiles.filter(f => f !== null).length);
+                console.log('Removed images:', removedImages.length);
+                
+                // Add loading state
+                updateBtn.disabled = true;
+                updateBtn.innerHTML = '<i class="bi bi-hourglass-split me-2"></i>Updating...';
+            });
+
+            console.log('Edit Vehicle Script Setup Complete');
+        });
+    </script>
+
+    <style>
+        .form-label.required::after {
+            content: " *";
+            color: #dc3545;
         }
 
-        // Form submission debug
-        document.querySelector('form').addEventListener('submit', function(e) {
-            console.log('Form submitting...');
-            console.log('Selected files:', fileInput.files.length);  // Log để debug số file khi submit
-        });
-    });
-</script>
+        .form-control:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 0.2rem rgba(37, 99, 235, 0.25);
+        }
+
+        .alert-info {
+            border-left: 4px solid #0dcaf0;
+        }
+        
+        .upload-container {
+            border: 1px solid #dee2e6;
+            border-radius: var(--border-radius);
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+        
+        .upload-area {
+            border: 2px dashed var(--primary);
+            border-radius: var(--border-radius);
+            padding: 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background-color: white;
+        }
+        
+        .upload-area:hover {
+            border-color: var(--primary-hover);
+            background-color: #f8f9fa;
+            transform: translateY(-2px);
+            box-shadow: var(--shadow);
+        }
+        
+        .upload-area.dragover {
+            border-color: var(--primary-hover);
+            background-color: #e3f2fd;
+            transform: scale(1.02);
+        }
+        
+        .currency-input {
+            position: relative;
+        }
+
+        .currency-input .form-control {
+            padding-left: 2.5rem;
+        }
+
+        .currency-symbol {
+            position: absolute;
+            left: 0.75rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--gray-500);
+            font-weight: 500;
+            z-index: 10;
+            pointer-events: none;
+        }
+
+        .image-container {
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .image-container:hover {
+            transform: scale(1.02);
+        }
+
+        .removing {
+            opacity: 0;
+            transform: scale(0.8);
+            transition: all 0.3s ease;
+        }
+    </style>
+}

@@ -1,137 +1,103 @@
 ﻿@model BusinessObjects.DTO.VehicleDTO
 
 @{
-    ViewData["Title"] = "Vehicle Details";
-    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "Chi tiết xe";
+    var userRole = ViewBag.UserRole as string;
+    var canManage = userRole == "evm_staff" || userRole == "dealer_manager";
 }
 
-<div class="container mt-4">
-    <div class="row justify-content-center">
-        <div class="col-lg-10">
-            <!-- Header -->
-            <div class="d-flex align-items-center mb-4">
-                <a asp-action="Index" class="btn btn-outline-secondary me-3">
-                    <i class="fas fa-arrow-left"></i>
-                </a>
-                <div>
-                    <h2 class="text-primary mb-0">
-                        <i class="fas fa-car me-2"></i>Vehicle Details
-                    </h2>
-                    <p class="text-muted mb-0">@Model.Name</p>
+<div class="container py-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0">
+                        <i class="bi bi-car-front me-2"></i>Chi tiết xe: @Model.Name
+                    </h4>
+                    <div>
+                        @if (canManage)
+                        {
+                            <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-warning me-2">
+                                <i class="bi bi-pencil me-1"></i>Chỉnh sửa
+                            </a>
+                        }
+                        <a asp-action="Index" class="btn btn-secondary">
+                            <i class="bi bi-arrow-left me-1"></i>Quay lại
+                        </a>
+                    </div>
                 </div>
-            </div>
-
-            <!-- Vehicle Details Card -->
-            <div class="card shadow">
-                <div class="card-body p-4">
+                <div class="card-body">
                     <div class="row">
-                        <!-- Vehicle Image -->
                         <div class="col-md-6">
                             @if (!string.IsNullOrEmpty(Model.Images))
                             {
-                                <div class="text-center mb-4">
-                                    <img src="@Model.Images.Split(',')[0].Trim()" 
-                                         class="img-fluid rounded" 
-                                         alt="@Model.Name" 
-                                         style="max-height: 400px; width: 100%; object-fit: cover;">
-                                </div>
-                                
-                                <!-- Additional Images -->
-                                @if (Model.Images.Split(',').Length > 1)
-                                {
-                                    <div class="row">
-                                        @foreach (var image in Model.Images.Split(',').Skip(1).Take(3))
+                                var images = Model.Images.Split(',');
+                                <div id="vehicleCarousel" class="carousel slide" data-bs-ride="carousel">
+                                    <div class="carousel-inner">
+                                        @for (int i = 0; i < images.Length; i++)
                                         {
-                                            <div class="col-4 mb-2">
-                                                <img src="@image.Trim()" 
-                                                     class="img-thumbnail" 
-                                                     style="height: 80px; width: 100%; object-fit: cover;" 
-                                                     alt="Vehicle Image">
+                                            <div class="carousel-item @(i == 0 ? "active" : "")">
+                                                <img src="@images[i]" class="d-block w-100" alt="@Model.Name" style="height: 300px; object-fit: cover;">
                                             </div>
                                         }
                                     </div>
-                                }
-                            }
-                            else
-                            {
-                                <div class="bg-light d-flex align-items-center justify-content-center rounded" style="height: 400px;">
-                                    <i class="fas fa-car fa-4x text-muted"></i>
+                                    @if (images.Length > 1)
+                                    {
+                                        <button class="carousel-control-prev" type="button" data-bs-target="#vehicleCarousel" data-bs-slide="prev">
+                                            <span class="carousel-control-prev-icon"></span>
+                                        </button>
+                                        <button class="carousel-control-next" type="button" data-bs-target="#vehicleCarousel" data-bs-slide="next">
+                                            <span class="carousel-control-next-icon"></span>
+                                        </button>
+                                    }
                                 </div>
                             }
                         </div>
-
-                        <!-- Vehicle Information -->
                         <div class="col-md-6">
-                            <h3 class="text-primary mb-3">@Model.Name</h3>
-                            
-                            <div class="row mb-3">
-                                <div class="col-6">
-                                    <strong>Brand:</strong>
-                                    <p class="text-muted mb-1">@Model.Brand</p>
-                                </div>
-                                <div class="col-6">
-                                    <strong>Model:</strong>
-                                    <p class="text-muted mb-1">@Model.Model</p>
-                                </div>
-                            </div>
-
-                            <div class="row mb-3">
-                                <div class="col-6">
-                                    <strong>Year:</strong>
-                                    <p class="text-muted mb-1">@(Model.Year?.ToString() ?? "N/A")</p>
-                                </div>
-                                <div class="col-6">
-                                    <strong>Price:</strong>
-                                    <p class="text-success mb-1 fw-bold fs-4">@Model.Price.ToString("C")</p>
-                                </div>
-                            </div>
-
-                            <div class="row mb-3">
-                                <div class="col-6">
-                                    <strong>Stock Quantity:</strong>
-                                    <p class="text-muted mb-1">@Model.StockQuantity units</p>
-                                </div>
-                                <div class="col-6">
-                                    <strong>Status:</strong>
-                                    @{
-                                        var stockBadgeClass = Model.StockQuantity <= 0 ? "danger" :
-                                        Model.StockQuantity <= 5 ? "warning" : "success";
-                                        var stockBadgeText = Model.StockQuantity <= 0 ? "Out of Stock" :
-                                        Model.StockQuantity <= 5 ? "Low Stock" : "In Stock";
-                                    }
-                                    <span class="badge bg-@stockBadgeClass">@stockBadgeText</span>
-                                </div>
-                            </div>
-
-                            @if (!string.IsNullOrEmpty(Model.Description))
-                            {
-                                <div class="mb-3">
-                                    <strong>Description:</strong>
-                                    <p class="text-muted mb-1">@Model.Description</p>
-                                </div>
-                            }
-
-                            @if (!string.IsNullOrEmpty(Model.Specifications))
-                            {
-                                <div class="mb-3">
-                                    <strong>Specifications:</strong>
-                                    <div class="text-muted small bg-light p-3 rounded">
-                                        @Html.Raw(Model.Specifications.Replace("\n", "<br>"))
-                                    </div>
-                                </div>
-                            }
-
-                            <!-- Action Buttons -->
-                            <div class="d-flex gap-2 mt-4">
-                                <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-warning">
-                                    <i class="fas fa-edit me-2"></i>Edit Vehicle
-                                </a>
-                                <a asp-action="Delete" asp-route-id="@Model.Id" class="btn btn-danger">
-                                    <i class="fas fa-trash me-2"></i>Delete Vehicle
-                                </a>
-                            </div>
+                            <table class="table">
+                                <tr>
+                                    <td><strong>Tên xe:</strong></td>
+                                    <td>@Model.Name</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Thương hiệu:</strong></td>
+                                    <td>@Model.Brand</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Model:</strong></td>
+                                    <td>@Model.Model</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Năm sản xuất:</strong></td>
+                                    <td>@Model.Year</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Giá:</strong></td>
+                                    <td class="text-danger fw-bold">@Model.Price.ToString("C")</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Số lượng tồn kho:</strong></td>
+                                    <td>@Model.StockQuantity</td>
+                                </tr>
+                            </table>
                         </div>
                     </div>
+                    
+                    @if (!string.IsNullOrEmpty(Model.Description))
+                    {
+                        <div class="mt-4">
+                            <h5>Mô tả:</h5>
+                            <p>@Model.Description</p>
+                        </div>
+                    }
+                    
+                    @if (!string.IsNullOrEmpty(Model.Specifications))
+                    {
+                        <div class="mt-4">
+                            <h5>Thông số kỹ thuật:</h5>
+                            <p>@Model.Specifications</p>
+                        </div>
+                    }
                 </div>
             </div>
         </div>

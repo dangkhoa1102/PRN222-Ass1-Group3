@@ -25,5 +25,7 @@ public partial class Dealer
 
     public virtual ICollection<Order> Orders { get; set; } = new List<Order>();
 
+    public virtual ICollection<TestDriveAppointment> TestDriveAppointments { get; set; } = new List<TestDriveAppointment>();
+
     public virtual ICollection<User> Users { get; set; } = new List<User>();
 }
