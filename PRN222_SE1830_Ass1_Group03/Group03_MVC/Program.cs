@@ -1,8 +1,6 @@
 ﻿using BusinessObjects.DTO;
 using DataAccessLayer;
-using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
-using Services;
 using Services.Service;
 using DataAccessLayer.Repositories;
 
@@ -24,7 +22,7 @@ builder.Services.AddDbContext<Vehicle_Dealer_ManagementContext>(options =>
 });
 
 // Register DAOs and Repositories (these depend on DbContext)
-builder.Services.AddScoped<AccountDao>();
+builder.Services.AddScoped<IAccountRepository, AccountRepository>();
 builder.Services.AddScoped<IVehicleRepository, VehicleRepository>();
 
 // Register Services (these depend on DAOs/Repositories)

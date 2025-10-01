@@ -6,23 +6,24 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using DataAccessLayer.Repositories;
 
-namespace Services
+namespace Services.Service
 {
     public class AccountService : IAccountService
     {
-        private readonly AccountDao _accountDao;
+        private readonly IAccountRepository _accountRep;
         
-        public AccountService(AccountDao accountDao)
+        public AccountService(IAccountRepository accountRep)
         {
-            _accountDao = accountDao;
+            _accountRep = accountRep;
         }
 
         public async Task<bool> CheckUserExists(string username, string email)
         {
             try
             {
-                return await _accountDao.CheckUserExists(username, email);
+                return await _accountRep.CheckUserExists(username, email);
             }
             catch
             {
@@ -34,7 +35,7 @@ namespace Services
         {
             try
             {
-                return await _accountDao.GetUserById(id);
+                return await _accountRep.GetUserById(id);
             }
             catch
             {
@@ -46,7 +47,7 @@ namespace Services
         {
             try
             {
-                return await _accountDao.Login(username, password);
+                return await _accountRep.Login(username, password);
             }
             catch
             {
@@ -63,7 +64,7 @@ namespace Services
                     return false;
                 }
 
-                return await Task.FromResult(_accountDao.AddUser(user));
+                return await Task.FromResult( await _accountRep.AddUser(user));
             }
             catch
             {
@@ -75,7 +76,7 @@ namespace Services
         {
             try
             {
-                var existingUser = await _accountDao.GetUserById(userDTO.Id);
+                var existingUser = await _accountRep.GetUserById(userDTO.Id);
                 if (existingUser == null) 
                 {
                     return false;
@@ -102,7 +103,7 @@ namespace Services
                 existingUser.CreatedAt = createdAt;
                 existingUser.IsActive = isActive;
 
-                return await Task.FromResult(_accountDao.UpdateUser(existingUser));
+                return await Task.FromResult(await _accountRep.UpdateUser(existingUser));
             }
             catch
             {
