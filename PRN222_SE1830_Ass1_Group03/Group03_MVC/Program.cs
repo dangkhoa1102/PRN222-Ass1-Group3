@@ -28,7 +28,8 @@ builder.Services.AddScoped<IVehicleRepository, VehicleRepository>();
 // Register Services (these depend on DAOs/Repositories)
 builder.Services.AddScoped<IAccountService, AccountService>();
 builder.Services.AddScoped<IVehicleService, VehicleService>();
-
+builder.Services.AddScoped<IOrderService, OrderService>();
+builder.Services.AddScoped<IOrderRepository, OrderRepository>();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

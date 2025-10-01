@@ -77,7 +77,7 @@ namespace Services.Service
             try
             {
                 var existingUser = await _accountRep.GetUserById(userDTO.Id);
-                if (existingUser == null) 
+                if (existingUser == null)
                 {
                     return false;
                 }

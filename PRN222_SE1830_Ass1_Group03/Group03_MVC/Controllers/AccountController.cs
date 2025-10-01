@@ -10,7 +10,6 @@ namespace Group03_MVC.Controllers
     public class AccountController : Controller
     {
         private readonly IAccountService _accountService;
-
         public AccountController(IAccountService accountService)
         {
             _accountService = accountService;
@@ -206,5 +205,6 @@ namespace Group03_MVC.Controllers
             HttpContext.Session.Clear();
             return RedirectToAction("Login");
         }
+        
     }
 }
