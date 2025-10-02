@@ -63,7 +63,7 @@ namespace Group03_MVC.Controllers
                 {
                     vehicleDTOs = vehicleDTOs.Where(v => v.Price >= minPrice.Value).ToList();
                 }
-
+                
                 if (maxPrice.HasValue)
                 {
                     vehicleDTOs = vehicleDTOs.Where(v => v.Price <= maxPrice.Value).ToList();

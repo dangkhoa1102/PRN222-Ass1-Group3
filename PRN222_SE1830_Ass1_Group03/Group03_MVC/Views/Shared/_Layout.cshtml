@@ -64,6 +64,21 @@
                             }
                         </ul>
                     </li>
+                    @if (Context.Session.GetString("Role") == "evm_staff" || Context.Session.GetString("Role") == "dealer_staff" || Context.Session.GetString("Role") == "dealer_manager")
+                    {
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="bi bi-calendar-check me-1"></i>Quản lý lịch hẹn
+                            </a>
+                            <ul class="dropdown-menu">
+                                <li>
+                                    <a class="dropdown-item" asp-controller="StaffTestDriveAppointments" asp-action="Index">
+                                        <i class="bi bi-list-ul me-2"></i>Danh sách lịch hẹn
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
+                    }
                 </ul>
 
                 <!-- Right Side -->
