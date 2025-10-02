@@ -1,0 +1,394 @@
+﻿@model BusinessObjects.Models.TestDriveAppointment
+
+@{
+    ViewData["Title"] = "Chi tiết lịch hẹn lái thử";
+}
+
+<div class="container py-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0">
+                        <i class="bi bi-calendar-check me-2"></i>Chi tiết lịch hẹn lái thử
+                    </h4>
+                    <a asp-action="Index" class="btn btn-secondary">
+                        <i class="bi bi-arrow-left me-1"></i>Quay lại danh sách
+                    </a>
+                </div>
+
+                <div class="card-body">
+                    @if (TempData["ErrorMessage"] != null)
+                    {
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            <i class="bi bi-exclamation-triangle me-2"></i>@TempData["ErrorMessage"]
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    }
+
+                    @if (TempData["SuccessMessage"] != null)
+                    {
+                        <div class="alert alert-success alert-dismissible fade show" role="alert">
+                            <i class="bi bi-check-circle me-2"></i>@TempData["SuccessMessage"]
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    }
+
+                    @if (Model != null)
+                    {
+                        <div class="row">
+                            <!-- Thông tin lịch hẹn -->
+                            <div class="col-md-8">
+                                <div class="card mb-4">
+                                    <div class="card-header">
+                                        <h5 class="mb-0">
+                                            <i class="bi bi-info-circle me-2"></i>Thông tin lịch hẹn
+                                        </h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <table class="table table-borderless">
+                                            <tr>
+                                                <td class="fw-bold" style="width: 30%;">Ngày tạo:</td>
+                                                <td>@(Model.CreatedAt?.ToString("dd/MM/yyyy HH:mm") ?? "Không xác định")</td>
+                                            </tr>
+                                            <tr>
+                                                <td class="fw-bold">Ngày hẹn:</td>
+                                                <td>
+                                                    <span class="badge bg-primary fs-6">
+                                                        <i class="bi bi-calendar-event me-1"></i>
+                                                        @Model.AppointmentDate.ToString("dd/MM/yyyy") lúc @Model.AppointmentDate.ToString("HH:mm")
+                                                    </span>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td class="fw-bold">Trạng thái:</td>
+                                                <td>
+                                                    @switch (Model.Status.ToLower())
+                                                    {
+                                                        case "pending":
+                                                            <span class="badge bg-warning text-dark fs-6">
+                                                                <i class="bi bi-hourglass-split me-1"></i>Chờ xử lý
+                                                            </span>
+                                                            break;
+                                                        case "process":
+                                                            <span class="badge bg-warning text-dark fs-6">
+                                                                <i class="bi bi-clock me-1"></i>Đang xử lý
+                                                            </span>
+                                                            break;
+                                                        case "confirmed":
+                                                            <span class="badge bg-success fs-6">
+                                                                <i class="bi bi-check-circle me-1"></i>Đã xác nhận
+                                                            </span>
+                                                            break;
+                                                        case "cancelled":
+                                                            <span class="badge bg-danger fs-6">
+                                                                <i class="bi bi-x-circle me-1"></i>Đã hủy
+                                                            </span>
+                                                            break;
+                                                        case "completed":
+                                                            <span class="badge bg-info fs-6">
+                                                                <i class="bi bi-check-all me-1"></i>Hoàn thành
+                                                            </span>
+                                                            break;
+                                                        default:
+                                                            <span class="badge bg-secondary fs-6">@Model.Status</span>
+                                                            break;
+                                                    }
+                                                </td>
+                                            </tr>
+                                            @if (!string.IsNullOrEmpty(Model.Notes))
+                                            {
+                                                <tr>
+                                                    <td class="fw-bold">Ghi chú:</td>
+                                                    <td>
+                                                        <div class="bg-light p-2 rounded">
+                                                            <i class="bi bi-card-text me-1"></i>@Model.Notes
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            }
+                                        </table>
+                                    </div>
+                                </div>
+
+                                <!-- Thông tin khách hàng -->
+                                <div class="card mb-4">
+                                    <div class="card-header">
+                                        <h5 class="mb-0">
+                                            <i class="bi bi-person me-2"></i>Thông tin khách hàng
+                                        </h5>
+                                    </div>
+                                    <div class="card-body">
+                                        @if (Model.Customer != null)
+                                        {
+                                            <table class="table table-borderless">
+                                                <tr>
+                                                    <td class="fw-bold" style="width: 30%;">Họ tên:</td>
+                                                    <td>@Model.Customer.FullName</td>
+                                                </tr>
+                                                <tr>
+                                                    <td class="fw-bold">Email:</td>
+                                                    <td>
+                                                        <i class="bi bi-envelope me-1"></i>
+                                                        <a href="mailto:@Model.Customer.Email">@Model.Customer.Email</a>
+                                                    </td>
+                                                </tr>
+                                                @if (!string.IsNullOrEmpty(Model.Customer.Phone))
+                                                {
+                                                    <tr>
+                                                        <td class="fw-bold">Điện thoại:</td>
+                                                        <td>
+                                                            <i class="bi bi-telephone me-1"></i>
+                                                            <a href="tel:@Model.Customer.Phone">@Model.Customer.Phone</a>
+                                                        </td>
+                                                    </tr>
+                                                }
+                                            </table>
+                                        }
+                                        else
+                                        {
+                                            <div class="text-muted">
+                                                <i class="bi bi-exclamation-triangle me-1"></i>Thông tin khách hàng không khả dụng
+                                            </div>
+                                        }
+                                    </div>
+                                </div>
+
+                                <!-- Thông tin xe -->
+                                <div class="card mb-4">
+                                    <div class="card-header">
+                                        <h5 class="mb-0">
+                                            <i class="bi bi-car-front me-2"></i>Thông tin xe
+                                        </h5>
+                                    </div>
+                                    <div class="card-body">
+                                        @if (Model.Vehicle != null)
+                                        {
+                                            <div class="row">
+                                                <div class="col-md-4">
+                                                    @if (!string.IsNullOrEmpty(Model.Vehicle.Images))
+                                                    {
+                                                        <img src="@Model.Vehicle.Images.Split(',')[0].Trim()"
+                                                             class="img-fluid rounded"
+                                                             alt="@Model.Vehicle.Name"
+                                                             style="max-height: 200px; object-fit: cover; width: 100%;">
+                                                    }
+                                                    else
+                                                    {
+                                                        <div class="bg-light d-flex align-items-center justify-content-center rounded"
+                                                             style="height: 200px;">
+                                                            <i class="bi bi-car-front fs-1 text-muted"></i>
+                                                        </div>
+                                                    }
+                                                </div>
+                                                <div class="col-md-8">
+                                                    <h5 class="fw-bold text-primary">@Model.Vehicle.Name</h5>
+                                                    <table class="table table-sm table-borderless">
+                                                        <tr>
+                                                            <td class="fw-bold" style="width: 30%;">Hãng:</td>
+                                                            <td>@Model.Vehicle.Brand</td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td class="fw-bold">Mẫu:</td>
+                                                            <td>@Model.Vehicle.Model</td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td class="fw-bold">Năm sản xuất:</td>
+                                                            <td>@Model.Vehicle.Year</td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td class="fw-bold">Giá bán:</td>
+                                                            <td><span class="text-success fw-bold">@Model.Vehicle.Price.ToString("N0") VNĐ</span></td>
+                                                        </tr>
+                                                    </table>
+                                                    @if (!string.IsNullOrEmpty(Model.Vehicle.Description))
+                                                    {
+                                                        <div class="mt-2">
+                                                            <strong>Mô tả:</strong>
+                                                            <p class="text-muted">@Model.Vehicle.Description</p>
+                                                        </div>
+                                                    }
+                                                </div>
+                                            </div>
+                                        }
+                                        else
+                                        {
+                                            <div class="text-muted">
+                                                <i class="bi bi-exclamation-triangle me-1"></i>Thông tin xe không khả dụng
+                                            </div>
+                                        }
+                                    </div>
+                                </div>
+
+                                <!-- Thông tin đại lý -->
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h5 class="mb-0">
+                                            <i class="bi bi-building me-2"></i>Thông tin đại lý
+                                        </h5>
+                                    </div>
+                                    <div class="card-body">
+                                        @if (Model.Dealer != null)
+                                        {
+                                            <table class="table table-borderless">
+                                                <tr>
+                                                    <td class="fw-bold" style="width: 30%;">Tên đại lý:</td>
+                                                    <td>@Model.Dealer.Name</td>
+                                                </tr>
+                                                <tr>
+                                                    <td class="fw-bold">Mã đại lý:</td>
+                                                    <td><code>@Model.Dealer.Code</code></td>
+                                                </tr>
+                                                <tr>
+                                                    <td class="fw-bold">Địa chỉ:</td>
+                                                    <td>
+                                                        <i class="bi bi-geo-alt me-1"></i>@Model.Dealer.Address
+                                                    </td>
+                                                </tr>
+                                                @if (!string.IsNullOrEmpty(Model.Dealer.Phone))
+                                                {
+                                                    <tr>
+                                                        <td class="fw-bold">Điện thoại:</td>
+                                                        <td>
+                                                            <i class="bi bi-telephone me-1"></i>
+                                                            <a href="tel:@Model.Dealer.Phone">@Model.Dealer.Phone</a>
+                                                        </td>
+                                                    </tr>
+                                                }
+                                                @if (!string.IsNullOrEmpty(Model.Dealer.Email))
+                                                {
+                                                    <tr>
+                                                        <td class="fw-bold">Email:</td>
+                                                        <td>
+                                                            <i class="bi bi-envelope me-1"></i>
+                                                            <a href="mailto:@Model.Dealer.Email">@Model.Dealer.Email</a>
+                                                        </td>
+                                                    </tr>
+                                                }
+                                            </table>
+                                        }
+                                        else
+                                        {
+                                            <div class="text-muted">
+                                                <i class="bi bi-exclamation-triangle me-1"></i>Thông tin đại lý không khả dụng
+                                            </div>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Sidebar hành động -->
+                            <div class="col-md-4">
+                                <div class="card sticky-top" style="top: 20px;">
+                                    <div class="card-header">
+                                        <h5 class="mb-0">
+                                            <i class="bi bi-gear me-2"></i>Hành động
+                                        </h5>
+                                    </div>
+                                    <div class="card-body">
+                                        @{
+                                            var userRole = Context.Session.GetString("Role");
+                                            var canManage = userRole == "dealer_manager" || userRole == "evm_staff" || userRole == "dealer_staff";
+                                        }
+
+                                        @if (canManage && (Model.Status.ToLower() == "pending" || Model.Status.ToLower() == "process"))
+                                        {
+                                            <form asp-action="ConfirmAppointment" method="post" style="display: inline;" class="w-100 mb-2">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" name="appointmentId" value="@Model.Id" />
+                                                <button type="submit" class="btn btn-success w-100"
+                                                        onclick="return confirm('Bạn có chắc chắn muốn xác nhận lịch hẹn này?')">
+                                                    <i class="bi bi-check-circle me-1"></i>Xác nhận lịch hẹn
+                                                </button>
+                                            </form>
+
+                                            <button type="button" class="btn btn-danger w-100 mb-2"
+                                                    data-bs-toggle="modal"
+                                                    data-bs-target="#cancelModal">
+                                                <i class="bi bi-x-circle me-1"></i>Hủy lịch hẹn
+                                            </button>
+                                        }
+
+                                        @if (canManage && Model.Status.ToLower() == "confirmed")
+                                        {
+                                            <form asp-action="CompleteAppointment" method="post" style="display: inline;" class="w-100 mb-2">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" name="appointmentId" value="@Model.Id" />
+                                                <button type="submit" class="btn btn-info w-100"
+                                                        onclick="return confirm('Bạn có chắc chắn rằng lịch hẹn này đã hoàn thành?')">
+                                                    <i class="bi bi-check-all me-1"></i>Hoàn thành lịch hẹn
+                                                </button>
+                                            </form>
+                                        }
+
+                                        <a asp-action="Index" class="btn btn-outline-secondary w-100">
+                                            <i class="bi bi-list me-1"></i>Danh sách lịch hẹn
+                                        </a>
+                                    </div>
+                                </div>
+
+                                <!-- Thông tin thêm -->
+                                <div class="card mt-3">
+                                    <div class="card-header bg-info text-white">
+                                        <h6 class="mb-0">
+                                            <i class="bi bi-info-circle me-1"></i>Thông tin thêm
+                                        </h6>
+                                    </div>
+                                    <div class="card-body small">
+                                        <p><strong>Ngày tạo:</strong> @(Model.CreatedAt?.ToString("dd/MM/yyyy HH:mm") ?? "Không xác định")</p>
+                                        <p class="mb-0"><strong>Cập nhật cuối:</strong> @(Model.UpdatedAt?.ToString("dd/MM/yyyy HH:mm") ?? "Không xác định")</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="text-center py-5">
+                            <i class="bi bi-exclamation-triangle fs-1 text-danger"></i>
+                            <h5 class="mt-2">Không tìm thấy lịch hẹn</h5>
+                            <p class="text-muted">Lịch hẹn không tồn tại hoặc bạn không có quyền truy cập.</p>
+                            <a asp-action="Index" class="btn btn-primary">
+                                <i class="bi bi-arrow-left me-1"></i>Quay lại danh sách
+                            </a>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal xác nhận hủy lịch hẹn -->
+@if (Model != null && (Model.Status.ToLower() == "pending" || Model.Status.ToLower() == "process"))
+{
+    <div class="modal fade" id="cancelModal" tabindex="-1" aria-labelledby="cancelModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="cancelModalLabel">Xác nhận hủy lịch hẹn</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-warning">
+                        <i class="bi bi-exclamation-triangle me-2"></i>
+                        <strong>Cảnh báo:</strong> Hành động này không thể hoàn tác!
+                    </div>
+                    <p>Bạn có chắc chắn muốn hủy lịch hẹn lái thử xe <strong>@Model.Vehicle?.Name</strong> vào ngày <strong>@Model.AppointmentDate.ToString("dd/MM/yyyy HH:mm")</strong>?</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="bi bi-x me-1"></i>Đóng
+                    </button>
+                    <form asp-action="CancelAppointment" method="post" style="display: inline;">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="appointmentId" value="@Model.Id" />
+                        <button type="submit" class="btn btn-danger" onclick="return confirm('Xác nhận hủy lịch hẹn?')">
+                            <i class="bi bi-check me-1"></i>Xác nhận hủy
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+}

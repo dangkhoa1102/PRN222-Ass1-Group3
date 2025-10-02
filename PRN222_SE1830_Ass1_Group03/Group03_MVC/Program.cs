@@ -15,14 +15,18 @@ builder.Services.AddSession();
 builder.Services.AddDbContext<Vehicle_Dealer_ManagementContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("MyDbConnection")));
 
-// Repositories
-builder.Services.AddScoped<OrderRepository>();
+// Register DAOs and Repositories (these depend on DbContext)
+builder.Services.AddScoped<IAccountRepository, AccountRepository>();
+builder.Services.AddScoped<IOrderRepository, OrderRepository>();
 builder.Services.AddScoped<IVehicleRepository, VehicleRepository>();
-builder.Services.AddScoped<AccountDao>();
+builder.Services.AddScoped<ITestDriveApoitmentRepository, StaffTestDriveAppoitmentRepository>();
+//builder.Services.AddScoped<AccountDao>();
 
 // Services
 builder.Services.AddScoped<IAccountService, AccountService>();
 builder.Services.AddScoped<IVehicleService, VehicleService>();
+builder.Services.AddScoped<IOrderService, OrderService>();
+builder.Services.AddScoped<ITestDriveAppointmentService, StaffTestDriveAppointmentService>();
 
 var app = builder.Build();
 
@@ -36,6 +40,7 @@ if (!app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseRouting();
+app.UseAuthentication();
 app.UseSession();
 app.UseAuthorization();
 

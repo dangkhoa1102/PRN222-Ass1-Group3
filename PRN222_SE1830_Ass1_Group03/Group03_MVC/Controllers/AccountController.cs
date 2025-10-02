@@ -1,8 +1,8 @@
 using BusinessObjects.DTO;
 using BusinessObjects.Models;
 using Group03_MVC.Models;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Mvc;
-using Services;
 using Services.Service;
 
 namespace Group03_MVC.Controllers
@@ -10,7 +10,6 @@ namespace Group03_MVC.Controllers
     public class AccountController : Controller
     {
         private readonly IAccountService _accountService;
-
         public AccountController(IAccountService accountService)
         {
             _accountService = accountService;
@@ -63,6 +62,7 @@ namespace Group03_MVC.Controllers
                     HttpContext.Session.SetString("FullName", user.FullName ?? "User");
                     HttpContext.Session.SetString("Username", user.Username);
                     HttpContext.Session.SetString("Role", user.Role);
+                    HttpContext.Session.SetString("DealerId", user.DealerId?.ToString() ?? Guid.Empty.ToString()); // Thêm DealerId vào session
 
                     // N?u user có DealerId
                     if (user.DealerId != null)
@@ -231,5 +231,6 @@ namespace Group03_MVC.Controllers
             HttpContext.Session.Clear();
             return RedirectToAction("Login");
         }
+        
     }
 }

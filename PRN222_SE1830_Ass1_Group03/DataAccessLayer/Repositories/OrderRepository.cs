@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -6,9 +6,10 @@ using BusinessObjects.DTO;
 using BusinessObjects.Models;
 using Microsoft.EntityFrameworkCore;
 
+
 namespace DataAccessLayer.Repositories
 {
-    public class OrderRepository
+    public class OrderRepository : IOrderRepository
     {
         private readonly Vehicle_Dealer_ManagementContext _context;
 
@@ -16,6 +17,14 @@ namespace DataAccessLayer.Repositories
         {
             _context = context;
         }
+
+        public async Task<List<Order>> GetOrderByUserId(Guid id)
+        {
+            return await _context.Orders
+                .Where(o => o.CustomerId == id)   // hoặc CreatedBy == id, tùy logic
+                .ToListAsync();
+        }
+
 
         // Lấy orders theo dealer (đây là cách bạn show orders cho staff: staff.dealer_id == orders.dealer_id)
         public async Task<List<OrderDTO>> GetOrdersByDealerAsync(Guid dealerId)

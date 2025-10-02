@@ -11,10 +11,10 @@ namespace Group03_MVC.Controllers
     [RoleAuthorization("dealer_staff", "dealer_manager", "evm_staff")]
     public class OrderOfStaffController : Controller
     {
-        private readonly OrderRepository _orderRepo;
+        private readonly IOrderRepository _orderRepo;
         private readonly Vehicle_Dealer_ManagementContext _context;
 
-        public OrderOfStaffController(OrderRepository orderRepo, Vehicle_Dealer_ManagementContext context)
+        public OrderOfStaffController(IOrderRepository orderRepo, Vehicle_Dealer_ManagementContext context)
         {
             _orderRepo = orderRepo;
             _context = context;

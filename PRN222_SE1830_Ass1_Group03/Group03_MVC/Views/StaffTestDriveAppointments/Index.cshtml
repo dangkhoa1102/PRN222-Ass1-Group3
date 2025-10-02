@@ -1,0 +1,293 @@
+﻿@model List<BusinessObjects.Models.TestDriveAppointment>
+
+@{
+    ViewData["Title"] = "Danh sách lịch hẹn lái thử";
+    var userRole = Context.Session.GetString("Role");
+    var canManage = userRole == "dealer_manager" || userRole == "evm_staff" || userRole == "dealer_staff" || userRole == "admin";
+}
+
+<div class="container-fluid py-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0">
+                        <i class="bi bi-calendar-check me-2"></i>Danh sách lịch hẹn lái thử
+                    </h4>
+                    <div class="text-muted">
+                        Role: @userRole | Có thể quản lý: @(canManage ? "Có" : "Không")
+                    </div>
+                </div>
+
+                <div class="card-body">
+                    @if (TempData["SuccessMessage"] != null)
+                    {
+                        <div class="alert alert-success alert-dismissible fade show" role="alert">
+                            <i class="bi bi-check-circle me-2"></i>@TempData["SuccessMessage"]
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    }
+
+                    @if (TempData["ErrorMessage"] != null)
+                    {
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            <i class="bi bi-exclamation-triangle me-2"></i>@TempData["ErrorMessage"]
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    }
+
+                    @if (Model != null && Model.Any())
+                    {
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <span class="text-muted">Hiển thị @Model.Count lịch hẹn</span>
+                            <div class="btn-group">
+                                <button type="button" class="btn btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown">
+                                    <i class="bi bi-funnel me-1"></i>Lọc theo trạng thái
+                                </button>
+                                <ul class="dropdown-menu">
+                                    <li><a class="dropdown-item" href="#" onclick="filterByStatus('all')">Tất cả</a></li>
+                                    <li><a class="dropdown-item" href="#" onclick="filterByStatus('pending')">Chờ xử lý</a></li>
+                                    <li><a class="dropdown-item" href="#" onclick="filterByStatus('confirmed')">Đã xác nhận</a></li>
+                                    <li><a class="dropdown-item" href="#" onclick="filterByStatus('cancelled')">Đã hủy</a></li>
+                                    <li><a class="dropdown-item" href="#" onclick="filterByStatus('completed')">Hoàn thành</a></li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div class="table-responsive">
+                            <table class="table table-striped table-hover">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th>Khách hàng</th>
+                                        <th>Xe</th>
+                                        <th>Ngày & Giờ</th>
+                                        <th>Trạng thái</th>
+                                        <th>Ghi chú</th>
+                                        <th>Hành động</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="appointmentTableBody">
+                                    @foreach (var appointment in Model)
+                                    {
+                                        <tr data-status="@appointment.Status.ToLower()">
+                                            <td>
+                                                <div>
+                                                    <strong>@(appointment.Customer?.FullName ?? "Không xác định")</strong>
+                                                    @if (!string.IsNullOrEmpty(appointment.Customer?.Email))
+                                                    {
+                                                        <br><small class="text-muted">@appointment.Customer.Email</small>
+                                                    }
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <div>
+                                                    <strong>@(appointment.Vehicle?.Name ?? "Không xác định")</strong>
+                                                    @if (appointment.Vehicle != null)
+                                                    {
+                                                        <br><small class="text-muted">@appointment.Vehicle.Brand @appointment.Vehicle.Model</small>
+                                                    }
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <div>
+                                                    <strong>@appointment.AppointmentDate.ToString("dd/MM/yyyy")</strong>
+                                                    <br><small class="text-muted">@appointment.AppointmentDate.ToString("HH:mm")</small>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                @switch (appointment.Status.ToLower())
+                                                {
+                                                    case "pending":
+                                                        <span class="badge bg-warning text-dark fs-6">
+                                                            <i class="bi bi-hourglass-split me-1"></i>Chờ xử lý
+                                                        </span>
+                                                        break;
+                                                    case "process":
+                                                        <span class="badge bg-warning text-dark fs-6">
+                                                            <i class="bi bi-clock me-1"></i>Đang xử lý
+                                                        </span>
+                                                        break;
+                                                    case "confirmed":
+                                                        <span class="badge bg-success fs-6">
+                                                            <i class="bi bi-check-circle me-1"></i>Đã xác nhận
+                                                        </span>
+                                                        break;
+                                                    case "cancelled":
+                                                        <span class="badge bg-danger fs-6">
+                                                            <i class="bi bi-x-circle me-1"></i>Đã hủy
+                                                        </span>
+                                                        break;
+                                                    case "completed":
+                                                        <span class="badge bg-info fs-6">
+                                                            <i class="bi bi-check-all me-1"></i>Hoàn thành
+                                                        </span>
+                                                        break;
+                                                    default:
+                                                        <span class="badge bg-secondary fs-6">@appointment.Status</span>
+                                                        break;
+                                                }
+                                            </td>
+                                            <td>
+                                                <span class="text-truncate" style="max-width: 150px;" title="@appointment.Notes">
+                                                    @(string.IsNullOrEmpty(appointment.Notes) ? "Không có" : appointment.Notes)
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <div class="btn-group" role="group">
+                                                    <!-- Nút xác nhận và hủy cho status pending hoặc process -->
+                                                    @if (canManage && (appointment.Status.ToLower() == "pending" || appointment.Status.ToLower() == "process"))
+                                                    {
+                                                        <button type="button" class="btn btn-success btn-sm me-1"
+                                                                onclick="confirmAppointment('@appointment.Id', '@appointment.Vehicle?.Name')"
+                                                                title="Xác nhận lịch hẹn">
+                                                            <i class="bi bi-check"></i> Xác nhận
+                                                        </button>
+                                                        
+                                                        <button type="button" class="btn btn-danger btn-sm me-1"
+                                                                onclick="cancelAppointment('@appointment.Id', '@appointment.Vehicle?.Name')"
+                                                                title="Hủy lịch hẹn">
+                                                            <i class="bi bi-x"></i> Hủy
+                                                        </button>
+                                                    }
+                                                    
+                                                    <!-- Nút hoàn thành cho status confirmed -->
+                                                    @if (canManage && appointment.Status.ToLower() == "confirmed")
+                                                    {
+                                                        <button type="button" class="btn btn-info btn-sm me-1"
+                                                                onclick="completeAppointment('@appointment.Id', '@appointment.Vehicle?.Name')"
+                                                                title="Hoàn thành lịch hẹn">
+                                                            <i class="bi bi-check-all"></i> Hoàn thành
+                                                        </button>
+                                                    }
+                                                    
+                                                    <a asp-action="Details" asp-route-appointmentId="@appointment.Id" 
+                                                       class="btn btn-outline-primary btn-sm" title="Xem chi tiết">
+                                                        <i class="bi bi-eye"></i> Chi tiết
+                                                    </a>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="text-center py-5">
+                            <i class="bi bi-calendar-x fs-1 text-muted"></i>
+                            <h5 class="mt-2">Không có lịch hẹn nào</h5>
+                            <p class="text-muted">Hiện tại không có lịch hẹn lái thử nào để hiển thị.</p>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Hidden Forms -->
+<form id="confirmForm" asp-action="ConfirmAppointment" method="post" style="display: none;">
+    @Html.AntiForgeryToken()
+    <input type="hidden" id="confirmAppointmentId" name="appointmentId" />
+</form>
+
+<form id="cancelForm" asp-action="CancelAppointment" method="post" style="display: none;">
+    @Html.AntiForgeryToken()
+    <input type="hidden" id="cancelAppointmentId" name="appointmentId" />
+</form>
+
+<form id="completeForm" asp-action="CompleteAppointment" method="post" style="display: none;">
+    @Html.AntiForgeryToken()
+    <input type="hidden" id="completeAppointmentId" name="appointmentId" />
+</form>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Page loaded successfully');
+            
+            // Auto hide alerts after 5 seconds
+            setTimeout(function() {
+                const alerts = document.querySelectorAll('.alert');
+                alerts.forEach(alert => {
+                    if (alert.classList.contains('show')) {
+                        const bsAlert = new bootstrap.Alert(alert);
+                        bsAlert.close();
+                    }
+                });
+            }, 5000);
+        });
+
+        // Function xác nhận appointment
+        function confirmAppointment(appointmentId, vehicleName) {
+            const vehicleText = vehicleName || 'xe này';
+            if (confirm(`Bạn có chắc chắn muốn xác nhận lịch hẹn lái thử ${vehicleText}?`)) {
+                const button = event.target.closest('button');
+                button.disabled = true;
+                button.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Đang xử lý...';
+                
+                document.getElementById('confirmAppointmentId').value = appointmentId;
+                document.getElementById('confirmForm').submit();
+            }
+        }
+
+        // Function hủy appointment
+        function cancelAppointment(appointmentId, vehicleName) {
+            const vehicleText = vehicleName || 'xe này';
+            if (confirm(`Bạn có chắc chắn muốn hủy lịch hẹn lái thử ${vehicleText}? Hành động này không thể hoàn tác.`)) {
+                const button = event.target.closest('button');
+                button.disabled = true;
+                button.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Đang hủy...';
+                
+                document.getElementById('cancelAppointmentId').value = appointmentId;
+                document.getElementById('cancelForm').submit();
+            }
+        }
+
+        // Function hoàn thành appointment
+        function completeAppointment(appointmentId, vehicleName) {
+            const vehicleText = vehicleName || 'xe này';
+            if (confirm(`Bạn có chắc chắn rằng khách hàng đã hoàn thành lái thử xe ${vehicleText}?`)) {
+                const button = event.target.closest('button');
+                button.disabled = true;
+                button.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Đang hoàn thành...';
+                
+                document.getElementById('completeAppointmentId').value = appointmentId;
+                document.getElementById('completeForm').submit();
+            }
+        }
+
+        // Filter function
+        function filterByStatus(status) {
+            const rows = document.querySelectorAll('#appointmentTableBody tr');
+            let visibleCount = 0;
+            
+            rows.forEach(row => {
+                if (status === 'all' || row.dataset.status === status) {
+                    row.style.display = '';
+                    visibleCount++;
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+            
+            const countElement = document.querySelector('.text-muted');
+            if (status === 'all') {
+                countElement.textContent = `Hiển thị ${rows.length} lịch hẹn`;
+            } else {
+                countElement.textContent = `Hiển thị ${visibleCount} lịch hẹn (lọc: ${getStatusText(status)})`;
+            }
+        }
+
+        function getStatusText(status) {
+            const statusMap = {
+                'pending': 'Chờ xử lý',
+                'confirmed': 'Đã xác nhận',
+                'cancelled': 'Đã hủy',
+                'completed': 'Hoàn thành'
+            };
+            return statusMap[status] || status;
+        }
+    </script>
+}
