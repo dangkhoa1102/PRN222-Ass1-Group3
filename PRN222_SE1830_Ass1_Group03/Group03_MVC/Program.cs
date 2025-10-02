@@ -1,7 +1,6 @@
 ﻿using BusinessObjects.DTO;
 using DataAccessLayer;
 using Microsoft.EntityFrameworkCore;
-using Services;
 using Services.Service;
 using DataAccessLayer.Repositories;
 
@@ -23,13 +22,15 @@ builder.Services.AddDbContext<Vehicle_Dealer_ManagementContext>(options =>
 });
 
 // Register DAOs and Repositories (these depend on DbContext)
-builder.Services.AddScoped<AccountDao>();
+builder.Services.AddScoped<IAccountRepository, AccountRepository>();
 builder.Services.AddScoped<IVehicleRepository, VehicleRepository>();
 builder.Services.AddScoped<ITestDriveApoitmentRepository, StaffTestDriveAppoitmentRepository>();
 
 // Register Services (these depend on DAOs/Repositories)
 builder.Services.AddScoped<IAccountService, AccountService>();
 builder.Services.AddScoped<IVehicleService, VehicleService>();
+builder.Services.AddScoped<IOrderService, OrderService>();
+builder.Services.AddScoped<IOrderRepository, OrderRepository>();
 builder.Services.AddScoped<ITestDriveAppointmentService, StaffTestDriveAppointmentService>();
 
 var app = builder.Build();
@@ -46,7 +47,7 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 
 app.UseRouting();
-
+app.UseAuthentication();
 app.UseAuthorization();
 app.UseSession();
 

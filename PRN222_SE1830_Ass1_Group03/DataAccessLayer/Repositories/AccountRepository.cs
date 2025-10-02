@@ -6,47 +6,18 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace DataAccessLayer
+namespace DataAccessLayer.Repositories
 {
-    public class AccountDao
+    public class AccountRepository : IAccountRepository
     {
         private readonly Vehicle_Dealer_ManagementContext _context;
-        
-        public AccountDao(Vehicle_Dealer_ManagementContext context)
+
+        public AccountRepository(Vehicle_Dealer_ManagementContext context)
         {
             _context = context;
         }
 
-        public async Task<bool> CheckUserExists(string username, string email)
-        {
-            try
-            {
-                var lowerUsername = username.ToLower();
-                var lowerEmail = email.ToLower();
-                return await _context.Users
-                    .AnyAsync(u => u.Username.ToLower() == lowerUsername || u.Email.ToLower() == lowerEmail);
-            }
-            catch
-            {
-                return true; // Return true on error to prevent registration
-            }
-        }
-
-        public async Task<User> Login(string username, string password)
-        {
-            try
-            {
-                return await _context.Users
-                    .Include(u => u.Dealer)
-                    .FirstOrDefaultAsync(u => u.Username == username && u.Password == password);
-            }
-            catch
-            {
-                return null;
-            }
-        }
-
-        public bool AddUser(User user)
+        public async Task<bool> AddUser(User user)
         {
             try
             {
@@ -68,7 +39,7 @@ namespace DataAccessLayer
                 }
 
                 _context.Users.Add(user);
-                _context.SaveChanges();
+                await _context.SaveChangesAsync();
                 return true;
             }
             catch (Exception ex)
@@ -76,6 +47,21 @@ namespace DataAccessLayer
                 // Log the exception for debugging
                 Console.WriteLine($"Error adding user: {ex.Message}");
                 return false;
+            }
+        }
+
+        public async Task<bool> CheckUserExists(string username, string email)
+        {
+            try
+            {
+                var lowerUsername = username.ToLower();
+                var lowerEmail = email.ToLower();
+                return await _context.Users
+                    .AnyAsync(u => u.Username.ToLower() == lowerUsername || u.Email.ToLower() == lowerEmail);
+            }
+            catch
+            {
+                return true; // Return true on error to prevent registration
             }
         }
 
@@ -93,7 +79,21 @@ namespace DataAccessLayer
             }
         }
 
-        public bool UpdateUser(User user)
+        public async Task<User> Login(string username, string password)
+        {
+            try
+            {
+                return await _context.Users
+                    .Include(u => u.Dealer)
+                    .FirstOrDefaultAsync(u => u.Username == username && u.Password == password);
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        public async Task<bool> UpdateUser(User user)
         {
             try
             {

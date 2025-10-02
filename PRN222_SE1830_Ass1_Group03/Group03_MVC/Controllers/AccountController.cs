@@ -1,8 +1,8 @@
 using BusinessObjects.DTO;
 using BusinessObjects.Models;
 using Group03_MVC.Models;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Mvc;
-using Services;
 using Services.Service;
 
 namespace Group03_MVC.Controllers
@@ -10,7 +10,6 @@ namespace Group03_MVC.Controllers
     public class AccountController : Controller
     {
         private readonly IAccountService _accountService;
-
         public AccountController(IAccountService accountService)
         {
             _accountService = accountService;
@@ -207,5 +206,6 @@ namespace Group03_MVC.Controllers
             HttpContext.Session.Clear();
             return RedirectToAction("Login");
         }
+        
     }
 }

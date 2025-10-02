@@ -1,0 +1,39 @@
+﻿@model List<Order> 
+@{
+ 
+    ViewData["Title"] = "Lịch sử đơn hàng";
+ 
+}
+
+<div class="container mt-5">
+    <h1 class="mb-4">Lịch sử Đơn hàng</h1>
+    @if(Model == null || !Model.Any())
+    {
+        <div class="alert alert-info">Bạn chưa có đơn hàng nào.</div>
+    }
+    else
+    {
+        <table class="table table-bordered table-striped">
+            <thead class="table-dark">
+                <tr>
+                    <th>Tên Xe</th>
+                    <th>Ngày đặt</th>
+                    <th>Tổng tiền</th>
+                    <th>Trạng thái</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var order in Model)
+                {
+                    <tr>
+                        <td>@order.Vehicle.Name</td>
+                        <td>@order.CreatedAt</td>
+                        <td>@order.TotalAmount</td>
+                        <td>@order.Status</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+
+</div>
