@@ -6,14 +6,14 @@ namespace Services.Service
 {
     public interface IOrderService
     {
-        Task<List<Orderdto>> GetAllOrders();
-        Task<List<Orderdto>> GetByStatus(string status);
-        Task<List<Orderdto>> GetCustomerOrders(Guid customerId);
-        Task<Orderdto?> GetOrderById(Guid id);
-        Task<bool> CreateOrder(CreateOrderDto dto);
+        Task<List<OrderDTO>> GetAllOrders();
+        Task<List<OrderDTO>> GetByStatus(string status);
+        Task<List<OrderDTO>> GetCustomerOrders(Guid customerId);
+        Task<OrderDTO?> GetOrderById(Guid id);
+        Task<bool> CreateOrder(CreateOrderDTO dto);
         Task<bool> ConfirmOrder(Guid orderId, Guid staffId);
         Task<bool> CompletePayment(Guid orderId, Guid customerId);
-        Task<bool> UpdateOrder(Orderdto dto);
+        Task<bool> UpdateOrder(OrderDTO dto);
         Task<bool> DeleteOrder(Guid id);
         Task<bool> RejectOrder(Guid orderId, Guid customerId);
 
@@ -33,11 +33,11 @@ namespace Services.Service
 
         }
 
-        public async Task<List<Orderdto>> GetAllOrders()
+        public async Task<List<OrderDTO>> GetAllOrders()
         {
             var orders = await _orderRepository.GetAll();
 
-            return orders.Select(o => new Orderdto
+            return orders.Select(o => new OrderDTO
             {
                 Id = o.Id,
                 OrderNumber = o.OrderNumber,
@@ -57,11 +57,11 @@ namespace Services.Service
         }
 
 
-        public async Task<List<Orderdto>> GetByStatus(string status)
+        public async Task<List<OrderDTO>> GetByStatus(string status)
         {
             var orders = await _orderRepository.GetByStatus(status);
 
-            return orders.Select(o => new Orderdto
+            return orders.Select(o => new OrderDTO
             {
                 Id = o.Id,
                 OrderNumber = o.OrderNumber,
@@ -81,11 +81,11 @@ namespace Services.Service
         }
 
 
-        public async Task<List<Orderdto>> GetCustomerOrders(Guid customerId)
+        public async Task<List<OrderDTO>> GetCustomerOrders(Guid customerId)
         {
             var orders = await _orderRepository.GetByCustomerId(customerId);
 
-            return orders.Select(o => new Orderdto
+            return orders.Select(o => new OrderDTO
             {
                 Id = o.Id,
                 OrderNumber = o.OrderNumber,
@@ -104,13 +104,13 @@ namespace Services.Service
             }).ToList();
         }
 
-        public async Task<Orderdto> GetOrderById(Guid id)
+        public async Task<OrderDTO> GetOrderById(Guid id)
         {
             var order = await _orderRepository.GetById(id);
 
             if (order == null) return null;
 
-            return new Orderdto
+            return new OrderDTO
             {
                 Id = order.Id,
                 OrderNumber = order.OrderNumber,
@@ -130,7 +130,7 @@ namespace Services.Service
         }
 
 
-        public async Task<bool> CreateOrder(CreateOrderDto dto)
+        public async Task<bool> CreateOrder(CreateOrderDTO dto)
         {
             // Lấy thông tin xe
             var vehicle = await _vehicleRepository.GetById(dto.VehicleId);
@@ -255,7 +255,7 @@ namespace Services.Service
             return success;
         }
 
-        public async Task<bool> UpdateOrder(Orderdto dto)
+        public async Task<bool> UpdateOrder(OrderDTO dto)
         {
             var order = await _orderRepository.GetById(dto.Id);
             if (order == null) return false;

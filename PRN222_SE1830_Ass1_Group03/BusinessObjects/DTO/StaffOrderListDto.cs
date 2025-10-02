@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace BusinessObjects.DTO
 {
-    public class StaffOrderListDto
+    public class StaffOrderListDTO
     {
         public Guid Id { get; set; }
         public string OrderNumber { get; set; }

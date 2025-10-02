@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace BusinessObjects.DTO
 {
-    public class PaymentResultDto
+    public class PaymentResultDTO
     {
         public bool Success { get; set; }
         public string Message { get; set; }

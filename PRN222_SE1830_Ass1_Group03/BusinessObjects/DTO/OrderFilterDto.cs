@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace BusinessObjects.DTO
 {
-    public class OrderFilterDto
+    public class OrderFilterDTO
     {
         public string OrderNumber { get; set; }
         public string Status { get; set; }

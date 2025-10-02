@@ -60,7 +60,7 @@ namespace Group03_MVC.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         [RoleAuthorization("customer")]
-        public async Task<IActionResult> CreateOrder([FromForm] CreateOrderDto dto)
+        public async Task<IActionResult> CreateOrder([FromForm] CreateOrderDTO dto)
         {
             var userIdStr = HttpContext.Session.GetString("UserId");
             if (string.IsNullOrEmpty(userIdStr))
@@ -147,8 +147,8 @@ namespace Group03_MVC.Controllers
             var userIdStr = HttpContext.Session.GetString("UserId");
             Guid customerId = string.IsNullOrEmpty(userIdStr) ? Guid.Empty : Guid.Parse(userIdStr);
 
-            var myOrders = new List<Orderdto>();
-            var pendingOrders = new List<Orderdto>();
+            var myOrders = new List<OrderDTO>();
+            var pendingOrders = new List<OrderDTO>();
 
             if (role == "customer")
             {

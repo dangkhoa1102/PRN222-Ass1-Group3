@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace BusinessObjects.DTO
 {
-    public class ConfirmOrderDto
+    public class ConfirmOrderDTO
     {
         [Required]
         public Guid OrderId { get; set; }

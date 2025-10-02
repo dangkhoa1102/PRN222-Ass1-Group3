@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace BusinessObjects.DTO
 {
-    public class OrderHistoryDto
+    public class OrderHistoryDTO
     {
         public Guid Id { get; set; }
         public string Status { get; set; }

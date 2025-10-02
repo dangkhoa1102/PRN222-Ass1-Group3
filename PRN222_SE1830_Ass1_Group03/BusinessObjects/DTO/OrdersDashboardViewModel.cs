@@ -10,7 +10,7 @@ namespace BusinessObjects.DTO
 {
     public class OrdersDashboardViewModel
     {
-        public List<Orderdto> MyOrders { get; set; } = new List<Orderdto>();
-        public List<Orderdto> PendingOrders { get; set; } = new List<Orderdto>();
+        public List<OrderDTO> MyOrders { get; set; } = new List<OrderDTO>();
+        public List<OrderDTO> PendingOrders { get; set; } = new List<OrderDTO>();
     }
 }
