@@ -45,6 +45,7 @@ namespace Group03_MVC.Controllers
                     HttpContext.Session.SetString("FullName", user.FullName ?? "User");
                     HttpContext.Session.SetString("Username", user.Username);
                     HttpContext.Session.SetString("Role", user.Role);
+                    HttpContext.Session.SetString("DealerId", user.DealerId?.ToString() ?? Guid.Empty.ToString()); // Thêm DealerId vào session
 
                     TempData["SuccessMessage"] = "Login successful!";
                     return user.Role switch
