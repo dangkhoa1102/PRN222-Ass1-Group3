@@ -27,7 +27,7 @@
                     <form asp-action="Edit" method="post" enctype="multipart/form-data" novalidate>
                         @Html.AntiForgeryToken()
                         <input type="hidden" asp-for="Id" />
-
+                        <input type="hidden" asp-for="Images" /> <!-- Thêm dòng này -->
                         <!-- Status Alert -->
                         <div class="alert alert-info d-flex align-items-center mb-4">
                             <i class="bi bi-info-circle me-2"></i>

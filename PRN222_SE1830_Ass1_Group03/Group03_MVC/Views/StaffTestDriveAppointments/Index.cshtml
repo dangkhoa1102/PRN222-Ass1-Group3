@@ -1,0 +1,116 @@
+﻿@model List<BusinessObjects.Models.TestDriveAppointment>
+
+@{
+    ViewData["Title"] = "Danh sách lịch hẹn lái thử";
+    var userRole = Context.Session.GetString("Role");
+    var canManage = userRole == "dealer_manager" || userRole == "evm_staff";
+}
+
+<div class="container-fluid py-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0">
+                        <i class="bi bi-calendar-check me-2"></i>Danh sách lịch hẹn lái thử
+                    </h4>
+                </div>
+
+                <div class="card-body">
+                    @if (Model != null && Model.Any())
+                    {
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <span class="text-muted">Hiển thị @Model.Count lịch hẹn</span>
+                        </div>
+
+                        <div class="table-responsive">
+                            <table class="table table-striped table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Khách hàng</th>
+                                        <th>Xe</th>
+                                        <th>Ngày</th>
+                                        <th>Trạng thái</th>
+                                        <th>Hành động</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var appointment in Model)
+                                    {
+                                        <tr>
+                                            <td>@(appointment.Customer?.FullName ?? "Không xác định")</td>
+                                            <td>@(appointment.Vehicle?.Name ?? "Không xác định")</td>
+                                            <td>@appointment.AppointmentDate.ToString("dd/MM/yyyy")</td>
+                                            <td>
+                                                @switch (appointment.Status.ToLower())
+                                                {
+                                                    case "process":
+                                                        <span class="badge bg-warning">Đang xử lý</span>
+                                                        break;
+                                                    case "confirmed":
+                                                        <span class="badge bg-success">Đã xác nhận</span>
+                                                        break;
+                                                    case "cancelled":
+                                                        <span class="badge bg-danger">Đã hủy</span>
+                                                        break;
+                                                    case "completed":
+                                                        <span class="badge bg-info">Hoàn thành</span>
+                                                        break;
+                                                    default:
+                                                        <span class="badge bg-secondary">@appointment.Status</span>
+                                                        break;
+                                                }
+                                            </td>
+                                            <td>
+                                                <div class="btn-group" role="group">
+                                                    @if (appointment.Status == "process")
+                                                    {
+                                                        <form asp-action="ConfirmAppointment" method="post" style="display:inline;">
+                                                            @Html.AntiForgeryToken()
+                                                            <input type="hidden" name="apoitmentsId" value="@appointment.Id" />
+                                                            <button type="submit" class="btn btn-success btn-sm me-1">
+                                                                <i class="bi bi-check"></i> Xác nhận
+                                                            </button>
+                                                        </form>
+                                                        <form asp-action="CancelAppointment" method="post" style="display:inline;">
+                                                            @Html.AntiForgeryToken()
+                                                            <input type="hidden" name="apoitmentsId" value="@appointment.Id" />
+                                                            <button type="submit" class="btn btn-danger btn-sm">
+                                                                <i class="bi bi-x"></i> Hủy
+                                                            </button>
+                                                        </form>
+                                                    }
+                                                    @if (appointment.Status == "confirmed")
+                                                    {
+                                                        <form asp-action="CompleteAppointment" method="post" style="display:inline;">
+                                                            @Html.AntiForgeryToken()
+                                                            <input type="hidden" name="apoitmentsId" value="@appointment.Id" />
+                                                            <button type="submit" class="btn btn-info btn-sm">
+                                                                <i class="bi bi-check-all"></i> Hoàn thành
+                                                            </button>
+                                                        </form>
+                                                    }
+                                                    <a asp-action="Details" asp-route-appointmentId="@appointment.Id" class="btn btn-outline-primary btn-sm">
+                                                        <i class="bi bi-eye"></i> Chi tiết
+                                                    </a>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="text-center py-5">
+                            <i class="bi bi-calendar-x fs-1 text-muted"></i>
+                            <h5 class="mt-2">Không có lịch hẹn nào</h5>
+                            <p class="text-muted">Hiện tại không có lịch hẹn lái thử nào để hiển thị.</p>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
