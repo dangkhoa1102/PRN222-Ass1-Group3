@@ -1,0 +1,36 @@
+﻿@model BusinessObjects.DTO.CreateOrderDTO
+
+@{
+    ViewData["Title"] = "Tạo đơn hàng mới";
+}
+
+<div class="container mt-4">
+    <h2>➕ Tạo đơn hàng mới</h2>
+
+    <form asp-action="CreateOrder" asp-controller="Order" method="post" class="mt-3">
+        <!-- CustomerId sẽ tự lấy từ session, không cần nhập -->
+        <input type="hidden" asp-for="CustomerId" value="@Context.Session.GetString("UserId")" />
+
+        <div class="mb-3">
+            <label for="DealerId" class="form-label">Đại lý</label>
+            <select asp-for="DealerId" class="form-control" asp-items="ViewBag.Dealers">
+                <option value="">-- Chọn đại lý --</option>
+            </select>
+        </div>
+
+        <div class="mb-3">
+            <label for="VehicleId" class="form-label">Xe</label>
+            <select asp-for="VehicleId" class="form-control" asp-items="ViewBag.Vehicles">
+                <option value="">-- Chọn xe --</option>
+            </select>
+        </div>
+
+        <div class="mb-3">
+            <label for="Notes" class="form-label">Ghi chú</label>
+            <textarea class="form-control" asp-for="Notes" placeholder="Nhập ghi chú nếu có"></textarea>
+        </div>
+
+        <button type="submit" class="btn btn-success">Tạo đơn</button>
+        <a href="@Url.Action("Index", "Order")" class="btn btn-secondary">⬅ Quay lại</a>
+    </form>
+</div>

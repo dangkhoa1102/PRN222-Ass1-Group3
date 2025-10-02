@@ -1,6 +1,7 @@
 ﻿using BusinessObjects.DTO;
 using DataAccessLayer;
 using Microsoft.EntityFrameworkCore;
+using Services;
 using Services.Service;
 using DataAccessLayer.Repositories;
 
@@ -24,13 +25,15 @@ builder.Services.AddDbContext<Vehicle_Dealer_ManagementContext>(options =>
 // Register DAOs and Repositories (these depend on DbContext)
 builder.Services.AddScoped<IAccountRepository, AccountRepository>();
 builder.Services.AddScoped<IVehicleRepository, VehicleRepository>();
+builder.Services.AddScoped<IOrderRepository, OrderRepository>();
+builder.Services.AddScoped<IDealerRepository, DealerRepository>();
 builder.Services.AddScoped<ITestDriveApoitmentRepository, StaffTestDriveAppoitmentRepository>();
 
 // Register Services (these depend on DAOs/Repositories)
 builder.Services.AddScoped<IAccountService, AccountService>();
 builder.Services.AddScoped<IVehicleService, VehicleService>();
 builder.Services.AddScoped<IOrderService, OrderService>();
-builder.Services.AddScoped<IOrderRepository, OrderRepository>();
+builder.Services.AddScoped<IDealerService, DealerService>();
 builder.Services.AddScoped<ITestDriveAppointmentService, StaffTestDriveAppointmentService>();
 
 var app = builder.Build();
@@ -39,7 +42,6 @@ var app = builder.Build();
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
 

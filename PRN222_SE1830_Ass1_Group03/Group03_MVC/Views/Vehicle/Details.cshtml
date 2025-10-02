@@ -106,6 +106,7 @@
                                 </tr>
                             </table>
 
+<<<<<<< HEAD
                             @* Customer Action Panel *@
                             @if (isCustomer)
                             {
@@ -121,7 +122,7 @@
                                             <p class="text-success mb-2 fs-6">
                                                 <i class="bi bi-check-circle me-2"></i>Xe này có sẵn để lái thử!
                                             </p>
-                                            <a asp-controller="CustomerTestDrive" asp-action="BookAppointment" 
+                                            <a asp-controller="CustomerTestDrive" asp-action="BookAppointment"
                                                asp-route-vehicleId="@Model.Id"
                                                class="btn btn-success w-100 fs-6">
                                                 <i class="bi bi-calendar-heart me-2"></i>Đặt lịch lái thử ngay
@@ -154,6 +155,50 @@
                                         </a>
                                     </div>
                                 </div>
+                            }
+
+                            @* Hiển thị thông báo đặt hàng *@
+                            @if (TempData["ErrorMessage"] != null)
+                            {
+                                <div class="alert alert-danger">@TempData["ErrorMessage"]</div>
+                            }
+                            @if (TempData["SuccessMessage"] != null)
+                            {
+                                <div class="alert alert-success">@TempData["SuccessMessage"]</div>
+                            }
+
+                            @* Nút đăng ký mua xe - chỉ cho khách hàng *@
+                            @{
+                                var role = Context.Session.GetString("Role");
+                                var customerId = Context.Session.GetString("UserId");
+                            }
+                            @if (role == "customer")
+                            {
+                                <form asp-action="CreateOrder" asp-controller="Order" method="post">
+                                    @Html.AntiForgeryToken()
+
+                                    <input type="hidden" name="VehicleId" value="@Model.Id" />
+
+                                    <div class="form-group">
+                                        <label>Chọn đại lý</label>
+                                        <select name="DealerId" class="form-control" required>
+                                            <option value="">-- Chọn đại lý --</option>
+                                            @foreach (var dealer in ViewBag.Dealers as List<BusinessObjects.Models.Dealer>)
+                                            {
+                                                <option value="@dealer.Id">@dealer.Name</option>
+                                            }
+                                        </select>
+                                    </div>
+
+                                    <div class="form-group mt-2">
+                                        <label>Ghi chú</label>
+                                        <textarea name="Notes" class="form-control"></textarea>
+                                    </div>
+
+                                    <button type="submit" class="btn btn-primary mt-3">Đặt hàng</button>
+                                </form>
+                            }
+>>>>>>> Baoo2
                             }
                         </div>
                     </div>

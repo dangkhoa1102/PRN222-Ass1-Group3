@@ -44,6 +44,7 @@
                             <i class="bi bi-house-door me-1"></i>Trang chủ
                         </a>
                     </li>
+
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                             <i class="bi bi-car-front me-1"></i>Quản lý xe
@@ -64,8 +65,8 @@
                             }
                         </ul>
                     </li>
-                    
-                    @* Menu for Staff (dealer_staff, dealer_manager, evm_staff) *@
+
+                    @* Staff: Quản lý lịch hẹn *@
                     @if (Context.Session.GetString("Role") == "evm_staff" || Context.Session.GetString("Role") == "dealer_staff" || Context.Session.GetString("Role") == "dealer_manager")
                     {
                         <li class="nav-item dropdown">
@@ -81,8 +82,8 @@
                             </ul>
                         </li>
                     }
-                    
-                    @* Menu for Customer *@
+
+                    @* Customer: Lái thử *@
                     @if (Context.Session.GetString("Role") == "customer")
                     {
                         <li class="nav-item dropdown">
@@ -103,7 +104,25 @@
                             </ul>
                         </li>
                     }
+
+                    @* Customer: Quản lý đơn hàng *@
+                    @if (Context.Session.GetString("Role") == "customer")
+                    {
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="bi bi-receipt me-1"></i>Quản lý đơn hàng
+                            </a>
+                            <ul class="dropdown-menu">
+                                <li>
+                                    <a class="dropdown-item" asp-controller="Order" asp-action="MyOrders" asp-route-customerId="@Context.Session.GetString("UserId")">
+                                        <i class="bi bi-person-check me-2"></i>Đơn hàng của tôi
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
+                    }
                 </ul>
+
 
                 <!-- Right Side -->
                 <div class="d-flex gap-2">

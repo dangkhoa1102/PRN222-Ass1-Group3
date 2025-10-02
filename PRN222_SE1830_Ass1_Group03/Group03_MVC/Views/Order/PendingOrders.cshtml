@@ -1,0 +1,50 @@
+﻿@model IEnumerable<BusinessObjects.DTO.OrderDTO>
+
+@{
+    ViewData["Title"] = "Đơn hàng chờ xử lý";
+}
+
+<div class="container mt-4">
+    <h2 class="mb-3">🕒 Đơn hàng chờ xác nhận</h2>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success">@TempData["SuccessMessage"]</div>
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger">@TempData["ErrorMessage"]</div>
+    }
+
+    <table class="table table-bordered table-striped">
+        <thead class="table-dark">
+            <tr>
+                <th>Mã đơn</th>
+                <th>Khách hàng</th>
+                <th>Xe</th>
+                <th>Số tiền</th>
+                <th>Ngày đặt</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var order in Model)
+            {
+                <tr>
+                    <td>@order.OrderNumber</td>
+                    <td>@order.CustomerName</td>
+                    <td>@order.VehicleName</td>
+                    <td>@order.TotalAmount.ToString("N0") đ</td>
+                    <td>@order.CreatedAt?.ToString("dd/MM/yyyy")</td>
+                    <td>
+                        <form asp-action="ConfirmOrder" method="post">
+                            <input type="hidden" name="orderId" value="@order.Id" />
+                            <input type="hidden" name="staffId" value="00000000-0000-0000-0000-000000000001" />
+                            <button type="submit" class="btn btn-sm btn-success">Xác nhận</button>
+                        </form>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
