@@ -1,0 +1,123 @@
+﻿@model BusinessObjects.Models.TestDriveAppointment
+
+@{
+    ViewData["Title"] = "Chi tiết lịch hẹn lái thử";
+    var userRole = Context.Session.GetString("Role");
+    var canManage = userRole == "dealer_manager" || userRole == "evm_staff";
+}
+
+<div class="container py-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0">
+                        <i class="bi bi-calendar-check me-2"></i>Chi tiết lịch hẹn: @Model.Id
+                    </h4>
+                    <a asp-action="Index" asp-controller="StaffTestDriveAppointments" class="btn btn-secondary">
+                        <i class="bi bi-arrow-left me-1"></i>Quay lại
+                    </a>
+                </div>
+                <div class="card-body">
+                    @if (Model != null)
+                    {
+                        <div class="row">
+                            <div class="col-md-6">
+                                <table class="table">
+                                    <tr>
+                                        <td><strong>Khách hàng:</strong></td>
+                                        <td>@(Model.Customer?.FullName ?? "Không xác định")</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Xe:</strong></td>
+                                        <td>@(Model.Vehicle?.Name ?? "Không xác định")</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Ngày:</strong></td>
+                                        <td>@Model.AppointmentDate.ToString("dd/MM/yyyy")</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Trạng thái:</strong></td>
+                                        <td>
+                                            @switch (Model.Status.ToLower())
+                                            {
+                                                case "process":
+                                                    <span class="badge bg-warning">Đang xử lý</span>
+                                                    break;
+                                                case "confirmed":
+                                                    <span class="badge bg-success">Đã xác nhận</span>
+                                                    break;
+                                                case "cancelled":
+                                                    <span class="badge bg-danger">Đã hủy</span>
+                                                    break;
+                                                case "completed":
+                                                    <span class="badge bg-info">Hoàn thành</span>
+                                                    break;
+                                                default:
+                                                    <span class="badge bg-secondary">@Model.Status</span>
+                                                    break;
+                                            }
+                                        </td>
+                                    </tr>
+                                </table>
+                            </div>
+                            <div class="col-md-6">
+                                @if (!string.IsNullOrEmpty(Model.Vehicle?.Images))
+                                {
+                                    <img src="@Model.Vehicle.Images.Split(',')[0].Trim()" class="img-fluid rounded" alt="@Model.Vehicle.Name" style="max-height: 300px; object-fit: cover;">
+                                }
+                                else
+                                {
+                                    <div class="bg-light d-flex align-items-center justify-content-center rounded" style="height: 300px;">
+                                        <i class="bi bi-car-front fs-1 text-muted"></i>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+
+                        <div class="mt-4">
+                            <h5>Hành động</h5>
+                            <div class="btn-group" role="group">
+                                @if (Model.Status == "process" && canManage)
+                                {
+                                    <form asp-action="ConfirmAppointment" method="post" style="display:inline;">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="appointmentId" value="@Model.Id" />
+                                        <button type="submit" class="btn btn-success btn-sm me-1">
+                                            <i class="bi bi-check"></i> Xác nhận
+                                        </button>
+                                    </form>
+                                    <form asp-action="CancelAppointment" method="post" style="display:inline;">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="appointmentId" value="@Model.Id" />
+                                        <button type="submit" class="btn btn-danger btn-sm">
+                                            <i class="bi bi-x"></i> Hủy
+                                        </button>
+                                    </form>
+                                }
+                                @if (Model.Status == "confirmed" && canManage)
+                                {
+                                    <form asp-action="CompleteAppointment" method="post" style="display:inline;">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="appointmentId" value="@Model.Id" />
+                                        <button type="submit" class="btn btn-info btn-sm">
+                                            <i class="bi bi-check-all"></i> Hoàn thành
+                                        </button>
+                                    </form>
+                                }
+                            </div>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="text-center py-5">
+                            <i class="bi bi-exclamation-triangle fs-1 text-danger"></i>
+                            <h5 class="mt-2">Không tìm thấy lịch hẹn</h5>
+                            <p class="text-muted">Lịch hẹn không tồn tại hoặc bạn không có quyền truy cập.</p>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
