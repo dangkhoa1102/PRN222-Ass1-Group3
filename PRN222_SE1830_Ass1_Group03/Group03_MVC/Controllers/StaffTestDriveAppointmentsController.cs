@@ -218,5 +218,71 @@ namespace Group03_MVC.Controllers
                 return RedirectToAction(nameof(Index));
             }
         }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> CompleteAppointment(Guid appointmentId)
+        {
+            try
+            {
+                var userRole = HttpContext.Session.GetString("Role");
+                
+                // Cho phép tất cả các role staff và admin thực hiện
+                if (string.IsNullOrEmpty(userRole) || 
+                    !(userRole == "dealer_manager" || userRole == "evm_staff" || userRole == "dealer_staff" || userRole == "admin"))
+                {
+                    TempData["ErrorMessage"] = "Bạn không có quyền thực hiện hành động này.";
+                    return RedirectToAction(nameof(Index));
+                }
+
+                var appointment = await _testDriveService.GetAppointmentById(appointmentId);
+                
+                if (appointment == null)
+                {
+                    TempData["ErrorMessage"] = "Không tìm thấy lịch hẹn.";
+                    return RedirectToAction(nameof(Index));
+                }
+
+                // Kiểm tra trạng thái lịch hẹn phải là "confirmed"
+                if (appointment.Status.ToLower() != "confirmed")
+                {
+                    TempData["ErrorMessage"] = "Chỉ có thể hoàn thành lịch hẹn đã được xác nhận.";
+                    return RedirectToAction(nameof(Index));
+                }
+
+                // Chỉ kiểm tra quyền truy cập với dealer staff
+                if (userRole == "dealer_staff" || userRole == "dealer_manager")
+                {
+                    var dealerIdString = HttpContext.Session.GetString("DealerId");
+                    if (!string.IsNullOrEmpty(dealerIdString))
+                    {
+                        var dealerId = Guid.Parse(dealerIdString);
+                        if (appointment.DealerId != dealerId)
+                        {
+                            TempData["ErrorMessage"] = "Bạn không có quyền xử lý lịch hẹn này.";
+                            return RedirectToAction(nameof(Index));
+                        }
+                    }
+                }
+
+                // Sử dụng service CompleteTestDriveAppointments
+                var result = await _testDriveService.CompleteTestDriveAppointments(appointmentId);
+                if (result)
+                {
+                    TempData["SuccessMessage"] = "Hoàn thành lịch hẹn thành công! Khách hàng giờ có thể đặt lịch hẹn mới.";
+                }
+                else
+                {
+                    TempData["ErrorMessage"] = "Không thể hoàn thành lịch hẹn. Vui lòng thử lại.";
+                }
+
+                return RedirectToAction(nameof(Index));
+            }
+            catch (Exception ex)
+            {
+                TempData["ErrorMessage"] = $"Có lỗi xảy ra khi hoàn thành lịch hẹn: {ex.Message}";
+                return RedirectToAction(nameof(Index));
+            }
+        }
     }
 }
