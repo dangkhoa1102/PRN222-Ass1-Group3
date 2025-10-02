@@ -60,20 +60,18 @@ namespace Group03_MVC.Controllers
             {
                 var customerId = Guid.Parse(customerIdString);
                 
-                // Kiểm tra xem khách hàng đã có lịch hẹn đang chờ xử lý hay chưa
+                // THAY ĐỔI LOGIC: Chỉ kiểm tra lịch hẹn pending hoặc confirmed
                 var existingAppointments = await _testDriveService.GetAppointmentsByCusId(customerId);
                 var activeAppointments = existingAppointments?.Where(a => 
-                    a.Status.ToLower() == "process" || 
-                    a.Status.ToLower() == "confirmed" || 
-                    a.Status.ToLower() == "pending").ToList();
+                    a.Status.ToLower() == "pending" || 
+                    a.Status.ToLower() == "confirmed").ToList();
 
                 if (activeAppointments != null && activeAppointments.Any())
                 {
-                    // Có lịch hẹn đang chờ xử lý
+                    // Có lịch hẹn đang chờ xử lý hoặc đã xác nhận
                     var earliestAppointment = activeAppointments.OrderBy(a => a.AppointmentDate).First();
                     var statusText = earliestAppointment.Status.ToLower() switch
                     {
-                        "process" => "đang xử lý",
                         "confirmed" => "đã được xác nhận",
                         "pending" => "đang chờ xử lý",
                         _ => earliestAppointment.Status
@@ -133,16 +131,15 @@ namespace Group03_MVC.Controllers
             {
                 var customerId = Guid.Parse(customerIdString);
 
-                // Kiểm tra lại xem khách hàng có lịch hẹn đang chờ xử lý không
+                // THAY ĐỔI LOGIC: Chỉ kiểm tra lại xem khách hàng có lịch hẹn pending hoặc confirmed không
                 var existingAppointments = await _testDriveService.GetAppointmentsByCusId(customerId);
                 var activeAppointments = existingAppointments?.Where(a => 
-                    a.Status.ToLower() == "process" || 
-                    a.Status.ToLower() == "confirmed" || 
-                    a.Status.ToLower() == "pending").ToList();
+                    a.Status.ToLower() == "pending" || 
+                    a.Status.ToLower() == "confirmed").ToList();
 
                 if (activeAppointments != null && activeAppointments.Any())
                 {
-                    TempData["ErrorMessage"] = "Bạn đã có lịch hẹn đang chờ xử lý. Vui lòng hoàn thành hoặc hủy lịch hẹn hiện tại trước khi đặt lịch mới.";
+                    TempData["ErrorMessage"] = "Bạn đã có lịch hẹn đang chờ xử lý hoặc đã xác nhận. Vui lòng hoàn thành hoặc hủy lịch hẹn hiện tại trước khi đặt lịch mới.";
                     await LoadVehiclesForView();
                     return View();
                 }
@@ -372,6 +369,31 @@ namespace Group03_MVC.Controllers
             {
                 return Json(new { available = false, error = ex.Message });
             }
+        }
+
+        // Đặt lịch hẹn
+        public async Task<IActionResult> BookAppointment()
+        {
+            var customerId = HttpContext.Session.GetString("UserId");
+            if (string.IsNullOrEmpty(customerId))
+            {
+                return RedirectToAction("Login", "Account");
+            }
+
+            // Kiểm tra có lịch hẹn đang chờ xử lý hoặc đã xác nhận
+            var existingAppointments = await _testDriveService.GetAppointmentsByCusId(Guid.Parse(customerId));
+            var activeAppointment = existingAppointments.FirstOrDefault(x => 
+                x.Status.ToLower() == "pending" || x.Status.ToLower() == "confirmed");
+
+            if (activeAppointment != null)
+            {
+                TempData["ErrorMessage"] = $"Bạn đã có lịch hẹn vào ngày {activeAppointment.AppointmentDate:dd/MM/yyyy HH:mm} đang {(activeAppointment.Status.ToLower() == "pending" ? "chờ xử lý" : "đã được xác nhận")}. Vui lòng hoàn thành hoặc hủy lịch hẹn hiện tại trước khi đặt lịch hẹn mới.";
+                return RedirectToAction("Index");
+            }
+
+            // Tiếp tục logic đặt lịch hẹn...
+
+            return View();
         }
     }
 

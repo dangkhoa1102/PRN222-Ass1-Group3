@@ -134,23 +134,29 @@
                                             </td>
                                             <td>
                                                 <div class="btn-group" role="group">
-                                                    <!-- Chỉ hiển thị nút xác nhận và hủy cho status pending hoặc process -->
+                                                    <!-- Nút xác nhận và hủy cho status pending hoặc process -->
                                                     @if (canManage && (appointment.Status.ToLower() == "pending" || appointment.Status.ToLower() == "process"))
                                                     {
-                                                        <button type="button" class="btn btn-success btn-sm me-1 confirm-btn"
-                                                                data-appointment-id="@appointment.Id"
-                                                                data-vehicle-name="@appointment.Vehicle?.Name"
+                                                        <button type="button" class="btn btn-success btn-sm me-1"
                                                                 onclick="confirmAppointment('@appointment.Id', '@appointment.Vehicle?.Name')"
                                                                 title="Xác nhận lịch hẹn">
                                                             <i class="bi bi-check"></i> Xác nhận
                                                         </button>
                                                         
-                                                        <button type="button" class="btn btn-danger btn-sm me-1 cancel-btn"
-                                                                data-appointment-id="@appointment.Id"
-                                                                data-vehicle-name="@appointment.Vehicle?.Name"
+                                                        <button type="button" class="btn btn-danger btn-sm me-1"
                                                                 onclick="cancelAppointment('@appointment.Id', '@appointment.Vehicle?.Name')"
                                                                 title="Hủy lịch hẹn">
                                                             <i class="bi bi-x"></i> Hủy
+                                                        </button>
+                                                    }
+                                                    
+                                                    <!-- Nút hoàn thành cho status confirmed -->
+                                                    @if (canManage && appointment.Status.ToLower() == "confirmed")
+                                                    {
+                                                        <button type="button" class="btn btn-info btn-sm me-1"
+                                                                onclick="completeAppointment('@appointment.Id', '@appointment.Vehicle?.Name')"
+                                                                title="Hoàn thành lịch hẹn">
+                                                            <i class="bi bi-check-all"></i> Hoàn thành
                                                         </button>
                                                     }
                                                     
@@ -191,9 +197,13 @@
     <input type="hidden" id="cancelAppointmentId" name="appointmentId" />
 </form>
 
+<form id="completeForm" asp-action="CompleteAppointment" method="post" style="display: none;">
+    @Html.AntiForgeryToken()
+    <input type="hidden" id="completeAppointmentId" name="appointmentId" />
+</form>
+
 @section Scripts {
     <script>
-        // Sử dụng vanilla JavaScript thay vì jQuery
         document.addEventListener('DOMContentLoaded', function() {
             console.log('Page loaded successfully');
             
@@ -201,24 +211,22 @@
             setTimeout(function() {
                 const alerts = document.querySelectorAll('.alert');
                 alerts.forEach(alert => {
-                    const bsAlert = new bootstrap.Alert(alert);
-                    bsAlert.close();
+                    if (alert.classList.contains('show')) {
+                        const bsAlert = new bootstrap.Alert(alert);
+                        bsAlert.close();
+                    }
                 });
             }, 5000);
         });
 
         // Function xác nhận appointment
         function confirmAppointment(appointmentId, vehicleName) {
-            console.log('Confirm clicked:', appointmentId, vehicleName);
-            
             const vehicleText = vehicleName || 'xe này';
             if (confirm(`Bạn có chắc chắn muốn xác nhận lịch hẹn lái thử ${vehicleText}?`)) {
-                // Disable button và show loading
                 const button = event.target.closest('button');
                 button.disabled = true;
                 button.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Đang xử lý...';
                 
-                // Set appointmentId và submit
                 document.getElementById('confirmAppointmentId').value = appointmentId;
                 document.getElementById('confirmForm').submit();
             }
@@ -226,25 +234,32 @@
 
         // Function hủy appointment
         function cancelAppointment(appointmentId, vehicleName) {
-            console.log('Cancel clicked:', appointmentId, vehicleName);
-            
             const vehicleText = vehicleName || 'xe này';
             if (confirm(`Bạn có chắc chắn muốn hủy lịch hẹn lái thử ${vehicleText}? Hành động này không thể hoàn tác.`)) {
-                // Disable button và show loading
                 const button = event.target.closest('button');
                 button.disabled = true;
                 button.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Đang hủy...';
                 
-                // Set appointmentId và submit
                 document.getElementById('cancelAppointmentId').value = appointmentId;
                 document.getElementById('cancelForm').submit();
             }
         }
 
+        // Function hoàn thành appointment
+        function completeAppointment(appointmentId, vehicleName) {
+            const vehicleText = vehicleName || 'xe này';
+            if (confirm(`Bạn có chắc chắn rằng khách hàng đã hoàn thành lái thử xe ${vehicleText}?`)) {
+                const button = event.target.closest('button');
+                button.disabled = true;
+                button.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Đang hoàn thành...';
+                
+                document.getElementById('completeAppointmentId').value = appointmentId;
+                document.getElementById('completeForm').submit();
+            }
+        }
+
         // Filter function
         function filterByStatus(status) {
-            console.log('Filter by status:', status);
-            
             const rows = document.querySelectorAll('#appointmentTableBody tr');
             let visibleCount = 0;
             
@@ -257,7 +272,6 @@
                 }
             });
             
-            // Update count
             const countElement = document.querySelector('.text-muted');
             if (status === 'all') {
                 countElement.textContent = `Hiển thị ${rows.length} lịch hẹn`;
@@ -274,28 +288,6 @@
                 'completed': 'Hoàn thành'
             };
             return statusMap[status] || status;
-        }
-
-        // Fallback jQuery version nếu có
-        if (typeof $ !== 'undefined') {
-            $(document).ready(function() {
-                console.log('jQuery loaded');
-                
-                // Backup event handlers
-                $(document).on('click', '.confirm-btn', function(e) {
-                    e.preventDefault();
-                    const appointmentId = $(this).data('appointment-id');
-                    const vehicleName = $(this).data('vehicle-name');
-                    confirmAppointment(appointmentId, vehicleName);
-                });
-
-                $(document).on('click', '.cancel-btn', function(e) {
-                    e.preventDefault();
-                    const appointmentId = $(this).data('appointment-id');
-                    const vehicleName = $(this).data('vehicle-name');
-                    cancelAppointment(appointmentId, vehicleName);
-                });
-            });
         }
     </script>
 }
