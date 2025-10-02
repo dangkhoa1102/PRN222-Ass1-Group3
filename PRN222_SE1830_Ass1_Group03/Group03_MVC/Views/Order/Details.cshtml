@@ -1,0 +1,41 @@
+﻿@model BusinessObjects.DTO.Orderdto
+@{
+    ViewData["Title"] = "Chi tiết đơn hàng";
+}
+
+@if (Model == null)
+{
+    <div class="alert alert-danger">Không tìm thấy đơn hàng.</div>
+}
+else
+{
+<div class="container mt-4">
+    <h2>📋 Chi tiết đơn hàng</h2>
+
+    <div class="card shadow-sm mt-3">
+        <div class="card-body">
+            <h5 class="card-title">Mã đơn: @Model.OrderNumber</h5>
+            <p><b>Khách hàng:</b> @Model.CustomerName</p>
+            <p><b>Xe:</b> @Model.VehicleName</p>
+            <p><b>Tổng tiền:</b> @Model.TotalAmount.ToString("N0") đ</p>
+            <p><b>Trạng thái:</b> <span class="badge bg-info text-dark">@Model.Status</span></p>
+            <p>
+                <b>Thanh toán:</b>
+                @if (Model.PaymentStatus?.Equals("Paid", StringComparison.OrdinalIgnoreCase) == true)
+                {
+                    <span class="badge bg-success">Đã thanh toán</span>
+                }
+                else
+                {
+                    <span class="badge bg-warning text-dark">Chưa thanh toán</span>
+                }
+            </p>
+            <p><b>Ngày tạo:</b> @Model.CreatedAt?.ToString("dd/MM/yyyy")</p>
+            <p><b>Ghi chú:</b> @Model.Notes</p>
+        </div>
+    </div>
+
+    <a href="@Url.Action("MyOrders", "Order", new { customerId = Model.CustomerId })"
+       class="btn btn-secondary mt-3">⬅ Quay lại</a>
+</div>
+}
