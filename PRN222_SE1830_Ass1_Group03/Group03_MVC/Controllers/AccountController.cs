@@ -38,6 +38,24 @@ namespace Group03_MVC.Controllers
                     return View(model);
                 }
 
+                //User user = await _accountService.Login(model.Username, model.Password);
+                //if (user != null)
+                //{
+                //    HttpContext.Session.SetString("UserId", user.Id.ToString());
+                //    HttpContext.Session.SetString("FullName", user.FullName ?? "User");
+                //    HttpContext.Session.SetString("Username", user.Username);
+                //    HttpContext.Session.SetString("Role", user.Role);
+
+                //    TempData["SuccessMessage"] = "Login successful!";
+                //    return user.Role switch
+                //    {
+                //        "customer" => RedirectToAction("Index", "Home"),
+                //        "admin" => RedirectToAction("Index", "Privacy"),
+                //        "dealer_staff" or "dealer_manager" => RedirectToAction("Index", "Home"),
+                //        "evm_staff" => RedirectToAction("Index", "Home"),
+                //        _ => RedirectToAction("Index", "Home")
+                //    };
+                //}
                 User user = await _accountService.Login(model.Username, model.Password);
                 if (user != null)
                 {
@@ -46,16 +64,23 @@ namespace Group03_MVC.Controllers
                     HttpContext.Session.SetString("Username", user.Username);
                     HttpContext.Session.SetString("Role", user.Role);
 
+                    // N?u user có DealerId
+                    if (user.DealerId != null)
+                    {
+                        HttpContext.Session.SetString("DealerId", user.DealerId.ToString());
+                    }
+
                     TempData["SuccessMessage"] = "Login successful!";
                     return user.Role switch
                     {
                         "customer" => RedirectToAction("Index", "Home"),
                         "admin" => RedirectToAction("Index", "Privacy"),
-                        "dealer_staff" or "dealer_manager" => RedirectToAction("Index", "Home"),
+                        "dealer_staff" or "dealer_manager" => RedirectToAction("Index", "OrderOfStaff"), 
                         "evm_staff" => RedirectToAction("Index", "Home"),
                         _ => RedirectToAction("Index", "Home")
                     };
                 }
+
 
                 ModelState.AddModelError(string.Empty, "Invalid username or password.");
                 return View(model);

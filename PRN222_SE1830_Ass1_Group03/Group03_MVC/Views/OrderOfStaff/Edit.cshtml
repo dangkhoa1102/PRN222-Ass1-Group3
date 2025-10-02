@@ -1,0 +1,82 @@
+﻿@model BusinessObjects.DTO.UpdateOrderRequest
+@using Microsoft.AspNetCore.Mvc.Rendering
+
+<h2 class="mb-4"><i class="fas fa-edit"></i> Chỉnh sửa đơn hàng</h2>
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="fas fa-check-circle"></i> <strong>Thành công!</strong> @TempData["Success"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="fas fa-exclamation-circle"></i> <strong>Lỗi!</strong> @TempData["Error"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<form asp-action="Edit" method="post">
+    @Html.AntiForgeryToken()
+
+    <div asp-validation-summary="All" class="text-danger mb-3"></div>
+    <input type="hidden" asp-for="Id" />
+
+    <div class="mb-3">
+        <label class="form-label">Khách hàng</label>
+        <input type="text" class="form-control" value="@Model.CustomerName" readonly />
+        <input type="hidden" asp-for="CustomerName" />
+        <input type="hidden" asp-for="CustomerPhone" />
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Xe</label>
+        <select asp-for="VehicleId" class="form-select" asp-items="ViewBag.Vehicles"></select>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Tổng tiền</label>
+        <input asp-for="TotalAmount" class="form-control" type="number" step="0.01" min="0" />
+        <span asp-validation-for="TotalAmount" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Trạng thái</label>
+        <select asp-for="Status" class="form-select"
+                asp-items="@(ViewBag.StatusList ?? new List<SelectListItem>())"></select>
+        <span asp-validation-for="Status" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Thanh toán</label>
+        <select asp-for="PaymentStatus" class="form-select"
+                asp-items="@(ViewBag.PaymentStatusList ?? new List<SelectListItem>())"></select>
+        <span asp-validation-for="PaymentStatus" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Ghi chú</label>
+        <textarea asp-for="Notes" class="form-control"></textarea>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Ngày tạo</label>
+        <input type="text" class="form-control" value="@Model.CreatedAt?.ToString("dd/MM/yyyy HH:mm")" readonly />
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Ngày cập nhật</label>
+        <input type="text" class="form-control" value="@Model.UpdatedAt?.ToString("dd/MM/yyyy HH:mm")" readonly />
+    </div>
+
+    <div class="d-flex gap-2">
+        <button type="submit" class="btn btn-primary">
+            <i class="fas fa-save"></i> Lưu
+        </button>
+        <a asp-action="Index" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Quay lại
+        </a>
+    </div>
+</form>

@@ -1,0 +1,25 @@
+﻿@model BusinessObjects.DTO.OrderDTO
+
+<h2 class="mb-4"><i class="fas fa-info-circle"></i> Chi tiết đơn hàng</h2>
+
+<div class="card shadow-sm border-0 rounded-3">
+    <div class="card-body">
+        <p><strong>Mã đơn:</strong> @Model.OrderNumber</p>
+        <p><strong>Khách hàng:</strong> @Model.CustomerName</p>
+        <p><strong>Xe:</strong> @Model.VehicleName</p>
+        <p><strong>Tổng tiền:</strong> @Model.TotalAmount.ToString("N0") ₫</p>
+        <p><strong>Trạng thái:</strong> <span class="badge bg-info">@Model.Status</span></p>
+        <p><strong>Thanh toán:</strong> <span class="badge bg-success">@Model.PaymentStatus</span></p>
+        <p><strong>Ghi chú:</strong> @Model.Notes</p>
+        <p><strong>Tạo lúc:</strong> @Model.CreatedAt?.ToString("dd/MM/yyyy HH:mm")</p>
+        <p><strong>Cập nhật lúc:</strong> @Model.UpdatedAt?.ToString("dd/MM/yyyy HH:mm")</p>
+    </div>
+    <div class="card-footer">
+        <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-warning">
+            <i class="fas fa-edit"></i> Sửa
+        </a>
+        <a asp-action="Index" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Quay lại
+        </a>
+    </div>
+</div>
