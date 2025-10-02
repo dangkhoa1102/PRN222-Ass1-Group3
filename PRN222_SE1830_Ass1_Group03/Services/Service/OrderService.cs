@@ -15,17 +15,22 @@ namespace Services.Service
         Task<bool> CompletePayment(Guid orderId, Guid customerId);
         Task<bool> UpdateOrder(Orderdto dto);
         Task<bool> DeleteOrder(Guid id);
+        Task<bool> RejectOrder(Guid orderId, Guid customerId);
+
     }
 
     public class OrderService : IOrderService
     {
         private readonly IOrderRepository _orderRepository;
         private readonly IVehicleRepository _vehicleRepository;
+        private readonly IDealerRepository _dealerRepository; 
 
-        public OrderService(IOrderRepository orderRepository, IVehicleRepository vehicleRepository)
+        public OrderService(IOrderRepository orderRepository, IVehicleRepository vehicleRepository, IDealerRepository dealerRepository)
         {
             _orderRepository = orderRepository;
             _vehicleRepository = vehicleRepository;
+            _dealerRepository = dealerRepository;
+
         }
 
         public async Task<List<Orderdto>> GetAllOrders()
@@ -127,53 +132,92 @@ namespace Services.Service
 
         public async Task<bool> CreateOrder(CreateOrderDto dto)
         {
-            // Get vehicle details to calculate total amount
+            // Lấy thông tin xe
             var vehicle = await _vehicleRepository.GetById(dto.VehicleId);
-            if (vehicle == null || vehicle.StockQuantity <= 0)
+            if (vehicle == null || vehicle.StockQuantity == null || vehicle.StockQuantity <= 0)
             {
-                return false; // Vehicle not available
+                return false; // Xe không tồn tại hoặc đã hết hàng
             }
 
+            // 🔹 Chọn đại lý tự động
+            var dealers = await _dealerRepository.GetAll();
+            if (dealers == null || !dealers.Any())
+            {
+                return false; // Không có dealer nào trong DB
+            }
+
+            var dealerId = dealers.First().Id;
+
+            // Tạo đơn hàng mới
             var order = new Order
             {
                 Id = Guid.NewGuid(),
                 OrderNumber = GenerateOrderNumber(),
                 CustomerId = dto.CustomerId,
-                DealerId = dto.DealerId,
+                DealerId = dealerId,  // ✅ tự gán
                 VehicleId = dto.VehicleId,
                 TotalAmount = vehicle.Price,
-                Status = "Pending",
+                Status = "Processing",
                 PaymentStatus = "Unpaid",
-                Notes = dto.Notes,
-                CreatedAt = DateTime.UtcNow,
-                UpdatedAt = DateTime.UtcNow
+                Notes = string.IsNullOrWhiteSpace(dto.Notes) ? null : dto.Notes,
+                CreatedAt = DateTime.Now,
+                UpdatedAt = DateTime.Now
             };
 
             var success = await _orderRepository.Add(order);
             if (success)
             {
-                // Add order history
-                await _orderRepository.AddOrderHistory(order.Id, "Pending", "Đơn hàng được tạo", dto.CustomerId);
+                // Lưu lịch sử đơn hàng
+                await _orderRepository.AddOrderHistory(order.Id, "Processing", "Đơn hàng được tạo", dto.CustomerId);
+
+                // Trừ stock ngay khi đặt
+                vehicle.StockQuantity -= 1;
+                await _vehicleRepository.UpdateAsync(vehicle);
             }
 
             return success;
         }
 
+
+
         public async Task<bool> ConfirmOrder(Guid orderId, Guid staffId)
         {
             var order = await _orderRepository.GetById(orderId);
-            if (order == null || order.Status != "Pending")
+            if (order == null || order.Status != "Processing")
             {
                 return false;
             }
 
-            order.Status = "Confirmed";
+            order.Status = "Completed"; // Staff xác nhận là hoàn tất đơn
             order.UpdatedAt = DateTime.UtcNow;
 
             var success = await _orderRepository.Update(order);
             if (success)
             {
-                await _orderRepository.AddOrderHistory(orderId, "Confirmed", "Đơn hàng được xác nhận bởi nhân viên", staffId);
+                await _orderRepository.AddOrderHistory(orderId, "Completed", "Đơn hàng được xác nhận và hoàn tất bởi nhân viên", staffId);
+            }
+
+            return success;
+        }
+
+        public async Task<bool> RejectOrder(Guid orderId, Guid customerId)
+        {
+            var order = await _orderRepository.GetById(orderId);
+            if (order == null) return false;
+
+            // chỉ cho phép reject khi đơn đang Processing
+            if (!order.Status.Equals("Processing", StringComparison.OrdinalIgnoreCase))
+            {
+                return false;
+            }
+
+            order.Status = "Rejected";
+            order.UpdatedAt = DateTime.UtcNow;
+
+            var success = await _orderRepository.Update(order);
+            if (success)
+            {
+                await _orderRepository.AddOrderHistory(order.Id, "Rejected", "Khách hàng từ chối đơn hàng", customerId);
             }
 
             return success;
@@ -182,7 +226,10 @@ namespace Services.Service
         public async Task<bool> CompletePayment(Guid orderId, Guid customerId)
         {
             var order = await _orderRepository.GetById(orderId);
-            if (order == null || order.Status != "Confirmed")
+            if (order == null) return false;
+
+            // chỉ cho phép thanh toán khi đơn đang Processing
+            if (!order.Status.Equals("Processing", StringComparison.OrdinalIgnoreCase))
             {
                 return false;
             }
@@ -194,7 +241,7 @@ namespace Services.Service
             var success = await _orderRepository.Update(order);
             if (success)
             {
-                // Reduce vehicle stock
+                // trừ stock
                 var vehicle = await _vehicleRepository.GetById(order.VehicleId);
                 if (vehicle != null && vehicle.StockQuantity.HasValue)
                 {
@@ -202,7 +249,7 @@ namespace Services.Service
                     await _vehicleRepository.UpdateAsync(vehicle);
                 }
 
-                await _orderRepository.AddOrderHistory(orderId, "Completed", "Thanh toán hoàn tất", customerId);
+                await _orderRepository.AddOrderHistory(orderId, "Completed", "Khách hàng đã thanh toán", customerId);
             }
 
             return success;

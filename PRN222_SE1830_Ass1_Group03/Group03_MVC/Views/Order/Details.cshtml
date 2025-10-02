@@ -18,8 +18,26 @@ else
             <p><b>Khách hàng:</b> @Model.CustomerName</p>
             <p><b>Xe:</b> @Model.VehicleName</p>
             <p><b>Tổng tiền:</b> @Model.TotalAmount.ToString("N0") đ</p>
-            <p><b>Trạng thái:</b> <span class="badge bg-info text-dark">@Model.Status</span></p>
             <p>
+                <b>Trạng thái:</b>
+                @if (Model.Status?.Equals("Processing", StringComparison.OrdinalIgnoreCase) == true)
+                {
+                    <span class="badge bg-warning text-white">Processing</span>
+                }
+                else if (Model.Status?.Equals("Completed", StringComparison.OrdinalIgnoreCase) == true)
+                {
+                    <span class="badge bg-success">Completed</span>
+                }
+                else if (Model.Status?.Equals("Rejected", StringComparison.OrdinalIgnoreCase) == true)
+                {
+                    <span class="badge bg-danger text-white">Rejected</span>
+                }
+                else
+                {
+                    <span class="badge bg-secondary">@Model.Status</span> <!-- fallback nếu có status lạ -->
+                }
+                </p>
+                <p>
                 <b>Thanh toán:</b>
                 @if (Model.PaymentStatus?.Equals("Paid", StringComparison.OrdinalIgnoreCase) == true)
                 {

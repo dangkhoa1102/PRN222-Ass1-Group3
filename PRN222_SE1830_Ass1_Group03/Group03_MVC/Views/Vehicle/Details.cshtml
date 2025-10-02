@@ -80,6 +80,48 @@
                                     <td>@Model.StockQuantity</td>
                                 </tr>
                             </table>
+
+                            @* Hiển thị thông báo đặt hàng *@
+                            @if (TempData["ErrorMessage"] != null)
+                            {
+                                <div class="alert alert-danger">@TempData["ErrorMessage"]</div>
+                            }
+                            @if (TempData["SuccessMessage"] != null)
+                            {
+                                <div class="alert alert-success">@TempData["SuccessMessage"]</div>
+                            }
+
+                            @* Nút đăng ký mua xe - chỉ cho khách hàng *@
+                            @{
+                                var role = Context.Session.GetString("Role");
+                                var customerId = Context.Session.GetString("UserId");
+                            }
+                            @if (role == "customer")
+                            {
+                                <form asp-action="CreateOrder" asp-controller="Order" method="post">
+                                    @Html.AntiForgeryToken()
+
+                                    <input type="hidden" name="VehicleId" value="@Model.Id" />
+
+                                    <div class="form-group">
+                                        <label>Chọn đại lý</label>
+                                        <select name="DealerId" class="form-control" required>
+                                            <option value="">-- Chọn đại lý --</option>
+                                            @foreach (var dealer in ViewBag.Dealers as List<BusinessObjects.Models.Dealer>)
+                                            {
+                                                <option value="@dealer.Id">@dealer.Name</option>
+                                            }
+                                        </select>
+                                    </div>
+
+                                    <div class="form-group mt-2">
+                                        <label>Ghi chú</label>
+                                        <textarea name="Notes" class="form-control"></textarea>
+                                    </div>
+
+                                    <button type="submit" class="btn btn-primary mt-3">Đặt hàng</button>
+                                </form>
+                            }
                         </div>
                     </div>
                     

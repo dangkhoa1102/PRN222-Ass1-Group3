@@ -26,11 +26,13 @@ builder.Services.AddDbContext<Vehicle_Dealer_ManagementContext>(options =>
 builder.Services.AddScoped<AccountDao>();
 builder.Services.AddScoped<IVehicleRepository, VehicleRepository>();
 builder.Services.AddScoped<IOrderRepository, OrderRepository>();
+builder.Services.AddScoped<IDealerRepository, DealerRepository>();  
 
 // Register Services (these depend on DAOs/Repositories)
 builder.Services.AddScoped<IAccountService, AccountService>();
 builder.Services.AddScoped<IVehicleService, VehicleService>();
-builder.Services.AddScoped<OrderService>();
+builder.Services.AddScoped<IOrderService, OrderService>();
+builder.Services.AddScoped<IDealerService, DealerService>();
 
 
 var app = builder.Build();
