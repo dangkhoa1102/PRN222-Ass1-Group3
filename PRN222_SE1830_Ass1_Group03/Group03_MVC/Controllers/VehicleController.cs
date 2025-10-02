@@ -399,8 +399,6 @@ namespace Group03_MVC.Controllers
 
                 if (!ModelState.IsValid)
                 {
-                    var errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage);
-                    Console.WriteLine("ModelState Errors: " + string.Join(", ", errors));
                     return View(vehicle);
                 }
 
@@ -413,7 +411,7 @@ namespace Group03_MVC.Controllers
                 vehicle.StockQuantity ??= 0;
 
                 var result = await _vehicleService.UpdateVehicle(vehicle);
-
+                
                 if (result)
                 {
                     TempData["SuccessMessage"] = "Vehicle updated successfully!";

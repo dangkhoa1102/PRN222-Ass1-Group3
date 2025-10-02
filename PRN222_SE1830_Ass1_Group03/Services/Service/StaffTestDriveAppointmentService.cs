@@ -15,6 +15,13 @@ namespace Services.Service
         Task<bool> BrowseTestDriveAppointments(bool browse, Guid apoitmentsId);
         Task<List<TestDriveAppointment>> GetAppointmentsByCusId(Guid cusId);
         Task<TestDriveAppointment?> GetAppointmentById(Guid apoitmentsId);
+        
+        // New methods for customer functionality
+        Task<bool> CreateTestDriveAppointment(TestDriveAppointment appointment);
+        Task<List<Vehicle>> GetAvailableVehiclesForTestDrive();
+        Task<bool> IsTimeSlotAvailable(Guid vehicleId, DateTime appointmentDate);
+        Task<bool> CancelCustomerAppointment(Guid appointmentId, Guid customerId);
+        Task<Dealer?> GetFirstAvailableDealer();
     }
 
     public class StaffTestDriveAppointmentService : ITestDriveAppointmentService
@@ -84,6 +91,81 @@ namespace Services.Service
             {
                 var appointments = await _repo.GetAppointmentsByCusId(cusId);
                 return appointments ?? new List<TestDriveAppointment>();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+                throw;
+            }
+        }
+
+        // New implementations for customer functionality
+        public async Task<bool> CreateTestDriveAppointment(TestDriveAppointment appointment)
+        {
+            try
+            {
+                if (appointment == null)
+                    return false;
+
+                // Set default values
+                appointment.Id = Guid.NewGuid();
+                appointment.Status = "pending";
+                appointment.CreatedAt = DateTime.Now;
+                appointment.UpdatedAt = DateTime.Now;
+
+                return await _repo.CreateTestDriveAppointment(appointment);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+                throw;
+            }
+        }
+
+        public async Task<List<Vehicle>> GetAvailableVehiclesForTestDrive()
+        {
+            try
+            {
+                return await _repo.GetAvailableVehiclesForTestDrive();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+                throw;
+            }
+        }
+
+        public async Task<bool> IsTimeSlotAvailable(Guid vehicleId, DateTime appointmentDate)
+        {
+            try
+            {
+                return await _repo.IsTimeSlotAvailable(vehicleId, appointmentDate);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+                throw;
+            }
+        }
+
+        public async Task<bool> CancelCustomerAppointment(Guid appointmentId, Guid customerId)
+        {
+            try
+            {
+                return await _repo.CancelCustomerAppointment(appointmentId, customerId);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+                throw;
+            }
+        }
+
+        public async Task<Dealer?> GetFirstAvailableDealer()
+        {
+            try
+            {
+                return await _repo.GetFirstAvailableDealer();
             }
             catch (Exception ex)
             {
