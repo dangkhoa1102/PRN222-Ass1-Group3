@@ -1,0 +1,428 @@
+﻿@{
+    ViewData["Title"] = "Đặt lịch hẹn lái thử";
+    var vehicles = ViewBag.Vehicles as List<BusinessObjects.Models.Vehicle>;
+    var selectedVehicleId = ViewBag.SelectedVehicleId as Guid?;
+    var selectedVehicleName = ViewBag.SelectedVehicleName as string;
+    var hasActiveAppointment = ViewBag.HasActiveAppointment as bool? ?? false;
+    var activeAppointmentId = ViewBag.ActiveAppointmentId as Guid?;
+}
+
+<div class="container py-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0">
+                        <i class="bi bi-calendar-plus me-2"></i>Đặt lịch hẹn lái thử
+                        @if (!string.IsNullOrEmpty(selectedVehicleName))
+                        {
+                            <small class="text-muted">- @selectedVehicleName</small>
+                        }
+                    </h4>
+                    <a asp-action="Index" class="btn btn-secondary">
+                        <i class="bi bi-arrow-left me-2"></i>Quay lại
+                    </a>
+                </div>
+
+                <div class="card-body">
+                    @if (TempData["ErrorMessage"] != null)
+                    {
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            <i class="bi bi-exclamation-triangle me-2"></i>@TempData["ErrorMessage"]
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    }
+
+                    @if (TempData["WarningMessage"] != null)
+                    {
+                        <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                            <i class="bi bi-exclamation-triangle me-2"></i>@TempData["WarningMessage"]
+                            @if (activeAppointmentId.HasValue)
+                            {
+                                <div class="mt-2">
+                                    <a asp-action="Details" asp-route-id="@activeAppointmentId" class="btn btn-sm btn-outline-primary me-2">
+                                        <i class="bi bi-eye me-1"></i>Xem chi tiết
+                                    </a>
+                                    <a asp-action="Index" class="btn btn-sm btn-outline-secondary">
+                                        <i class="bi bi-list me-1"></i>Danh sách lịch hẹn
+                                    </a>
+                                </div>
+                            }
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    }
+
+                    <form method="post" asp-action="BookAppointment" id="bookingForm">
+                        @Html.AntiForgeryToken()
+
+                        <div class="row">
+                            <div class="col-md-8">
+                                <!-- Chọn xe -->
+                                <div class="mb-4">
+                                    <label for="vehicleId" class="form-label">
+                                        <i class="bi bi-car-front me-2"></i>Chọn xe muốn lái thử <span class="text-danger">*</span>
+                                    </label>
+                                    <select class="form-select" id="vehicleId" name="vehicleId" required @(hasActiveAppointment ? "disabled" : "")>
+                                        <option value="">-- Chọn xe --</option>
+                                        @if (vehicles != null)
+                                        {
+                                            @foreach (var vehicle in vehicles)
+                                            {
+                                                var isSelected = selectedVehicleId.HasValue && selectedVehicleId.Value == vehicle.Id;
+                                                <option value="@vehicle.Id"
+                                                        data-brand="@vehicle.Brand"
+                                                        data-model="@vehicle.Model"
+                                                        data-year="@vehicle.Year"
+                                                        data-price="@vehicle.Price.ToString("N0")"
+                                                        data-image="@(vehicle.Images?.Split(',').FirstOrDefault()?.Trim())"
+                                                        selected="@isSelected">
+                                                    @vehicle.Name (@vehicle.Brand @vehicle.Model @vehicle.Year)
+                                                </option>
+                                            }
+                                        }
+                                    </select>
+                                    <div class="invalid-feedback" id="vehicleValidationMessage">
+                                        Vui lòng chọn xe muốn lái thử.
+                                    </div>
+                                    @if (hasActiveAppointment)
+                                    {
+                                        <div class="form-text text-warning">
+                                            <i class="bi bi-info-circle me-1"></i>Không thể đặt lịch mới khi đã có lịch hẹn đang chờ xử lý.
+                                        </div>
+                                    }
+                                </div>
+
+                                <!-- Ngày và Giờ hẹn riêng biệt -->
+                                <div class="row mb-4">
+                                    <div class="col-md-6">
+                                        <label for="appointmentDate" class="form-label">
+                                            <i class="bi bi-calendar-event me-2"></i>Ngày hẹn <span class="text-danger">*</span>
+                                        </label>
+                                        <input type="date"
+                                               class="form-control"
+                                               id="appointmentDate"
+                                               name="appointmentDate"
+                                               min="@DateTime.Now.ToString("yyyy-MM-dd")"
+                                               required
+                                               @(hasActiveAppointment ? "disabled" : "")>
+                                        <div class="invalid-feedback" id="dateValidationMessage">
+                                            Vui lòng chọn ngày hẹn.
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="appointmentTime" class="form-label">
+                                            <i class="bi bi-clock me-2"></i>Giờ hẹn <span class="text-danger">*</span>
+                                        </label>
+                                        <select class="form-select" id="appointmentTime" name="appointmentTime" required @(hasActiveAppointment ? "disabled" : "")>
+                                            <option value="">-- Chọn giờ --</option>
+                                            <option value="08:00">08:00</option>
+                                            <option value="09:00">09:00</option>
+                                            <option value="10:00">10:00</option>
+                                            <option value="11:00">11:00</option>
+                                            <option value="13:00">13:00</option>
+                                            <option value="14:00">14:00</option>
+                                            <option value="15:00">15:00</option>
+                                            <option value="16:00">16:00</option>
+                                            <option value="17:00">17:00</option>
+                                        </select>
+                                        <div class="invalid-feedback" id="timeValidationMessage">
+                                            Vui lòng chọn giờ hẹn.
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="form-text mb-3">
+                                    <i class="bi bi-info-circle me-2"></i>Vui lòng chọn thời gian ít nhất 1 giờ sau thời điểm hiện tại.
+                                </div>
+
+                                <div id="availabilityMessage" class="mb-4"></div>
+
+                                <!-- Ghi chú -->
+                                <div class="mb-4">
+                                    <label for="notes" class="form-label">
+                                        <i class="bi bi-card-text me-2"></i>Ghi chú
+                                    </label>
+                                    <textarea class="form-control"
+                                              id="notes"
+                                              name="notes"
+                                              rows="3"
+                                              placeholder="Nhập ghi chú nếu có (tùy chọn)"
+                                              @(hasActiveAppointment ? "disabled" : "")></textarea>
+                                    <div class="form-text">
+                                        Ví dụ: Yêu cầu đặc biệt, thời gian linh hoạt, v.v.
+                                    </div>
+                                </div>
+
+                                <!-- Hidden field for combined datetime -->
+                                <input type="hidden" id="combinedDateTime" name="AppointmentDateTime" />
+
+                                <!-- Buttons -->
+                                <div class="d-flex gap-2">
+                                    <button type="submit" class="btn btn-primary" id="submitBtn" @(hasActiveAppointment ? "disabled" : "")>
+                                        <i class="bi bi-check-circle me-2"></i>Đặt lịch hẹn
+                                    </button>
+                                    <a asp-action="Index" class="btn btn-outline-secondary">
+                                        <i class="bi bi-x-circle me-2"></i>Hủy bỏ
+                                    </a>
+                                </div>
+                            </div>
+
+                            <div class="col-md-4">
+                                <!-- Preview card -->
+                                <div class="card bg-light" id="vehiclePreview" style="@(selectedVehicleId.HasValue ? "" : "display: none;")">
+                                    <div class="card-header">
+                                        <h6 class="mb-0">
+                                            <i class="bi bi-eye me-2"></i>Xem trước
+                                        </h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div id="vehicleImage" class="text-center mb-3">
+                                            <div class="bg-white rounded p-3">
+                                                <i class="bi bi-car-front fs-1 text-muted"></i>
+                                            </div>
+                                        </div>
+                                        <div id="vehicleInfo">
+                                            <h6 id="vehicleName" class="mb-2"></h6>
+                                            <p class="mb-1"><strong>Hãng:</strong> <span id="vehicleBrand"></span></p>
+                                            <p class="mb-1"><strong>Mẫu:</strong> <span id="vehicleModel"></span></p>
+                                            <p class="mb-1"><strong>Năm:</strong> <span id="vehicleYear"></span></p>
+                                            <p class="mb-0"><strong>Giá:</strong> <span id="vehiclePrice" class="text-primary fw-bold"></span> VNĐ</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Tips -->
+                                <div class="card border-info mt-3">
+                                    <div class="card-header bg-info text-white">
+                                        <h6 class="mb-0">
+                                            <i class="bi bi-lightbulb me-2"></i>Lưu ý
+                                        </h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <ul class="mb-0">
+                                            <li class="mb-1">Vui lòng mang theo giấy phép lái xe hợp lệ</li>
+                                            <li class="mb-1">Đến đúng giờ để tránh ảnh hưởng đến lịch hẹn khác</li>
+                                            <li class="mb-1">Chúng tôi sẽ liên hệ xác nhận lịch hẹn trong vòng 24h</li>
+                                            <li>Có thể hủy hoặc đổi lịch trước 2 giờ</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            const vehicleSelect = $('#vehicleId');
+            const appointmentDateInput = $('#appointmentDate');
+            const appointmentTimeInput = $('#appointmentTime');
+            const vehiclePreview = $('#vehiclePreview');
+            const submitBtn = $('#submitBtn');
+            const availabilityMessage = $('#availabilityMessage');
+            const combinedDateTimeInput = $('#combinedDateTime');
+            const hasActiveAppointment = @(hasActiveAppointment.ToString().ToLower());
+
+            // Disable form if user has active appointment
+            if (hasActiveAppointment) {
+                $('#bookingForm input, #bookingForm select, #bookingForm textarea, #bookingForm button[type="submit"]').prop('disabled', true);
+                availabilityMessage.html('<div class="alert alert-warning"><i class="bi bi-exclamation-triangle me-2"></i>Không thể đặt lịch hẹn mới khi đã có lịch hẹn đang chờ xử lý.</div>');
+                return;
+            }
+
+            // Set minimum date to today
+            const today = new Date().toISOString().split('T')[0];
+            appointmentDateInput.attr('min', today);
+
+            // Function to clear validation messages
+            function clearValidationMessage(elementId) {
+                const element = $('#' + elementId);
+                element.removeClass('is-invalid');
+                element.next('.invalid-feedback').hide();
+            }
+
+            // Handle vehicle selection
+            vehicleSelect.on('change', function() {
+                const selectedOption = this.options[this.selectedIndex];
+
+                if (this.value) {
+                    // Clear validation message when vehicle is selected
+                    clearValidationMessage('vehicleId');
+                    
+                    // Show preview
+                    vehiclePreview.show();
+
+                    // Update preview info
+                    $('#vehicleName').text(selectedOption.text.split(' (')[0]);
+                    $('#vehicleBrand').text($(selectedOption).data('brand') || '');
+                    $('#vehicleModel').text($(selectedOption).data('model') || '');
+                    $('#vehicleYear').text($(selectedOption).data('year') || '');
+                    $('#vehiclePrice').text($(selectedOption).data('price') || '');
+
+                    // Update image
+                    const imageContainer = $('#vehicleImage');
+                    const imageUrl = $(selectedOption).data('image');
+
+                    if (imageUrl && imageUrl.trim() !== '') {
+                        imageContainer.html(`<img src="${imageUrl}" class="img-fluid rounded" alt="Vehicle Image" style="max-height: 150px; object-fit: cover;">`);
+                    } else {
+                        imageContainer.html('<div class="bg-white rounded p-3"><i class="bi bi-car-front fs-1 text-muted"></i></div>');
+                    }
+
+                    // Check availability if date and time are selected
+                    checkAvailability();
+                } else {
+                    vehiclePreview.hide();
+                    availabilityMessage.html('');
+                }
+            });
+
+            // Handle date change
+            appointmentDateInput.on('change', function() {
+                if (this.value) {
+                    clearValidationMessage('appointmentDate');
+                }
+                checkAvailability();
+            });
+
+            // Handle time change
+            appointmentTimeInput.on('change', function() {
+                if (this.value) {
+                    clearValidationMessage('appointmentTime');
+                }
+                checkAvailability();
+            });
+
+            // Check time slot availability
+            function checkAvailability() {
+                const vehicleId = vehicleSelect.val();
+                const appointmentDate = appointmentDateInput.val();
+                const appointmentTime = appointmentTimeInput.val();
+
+                if (!vehicleId || !appointmentDate || !appointmentTime) {
+                    availabilityMessage.html('');
+                    return;
+                }
+
+                // Combine date and time
+                const combinedDateTime = appointmentDate + ' ' + appointmentTime;
+                const selectedDateTime = new Date(combinedDateTime);
+                const now = new Date();
+                const oneHourFromNow = new Date(now.getTime() + 60 * 60 * 1000);
+
+                // Check if selected time is valid
+                if (selectedDateTime <= oneHourFromNow) {
+                    availabilityMessage.html('<div class="alert alert-warning"><i class="bi bi-exclamation-triangle me-2"></i>Vui lòng chọn thời gian ít nhất 1 giờ sau hiện tại.</div>');
+                    submitBtn.prop('disabled', true);
+                    return;
+                }
+
+                // Update hidden field
+                combinedDateTimeInput.val(selectedDateTime.toISOString());
+
+                // Show loading message
+                availabilityMessage.html('<div class="text-info"><i class="bi bi-clock me-2"></i>Đang kiểm tra khả dụng...</div>');
+                submitBtn.prop('disabled', true);
+
+                // Make AJAX request
+                $.ajax({
+                    url: '@Url.Action("CheckTimeSlotAvailability")',
+                    method: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({
+                        vehicleId: vehicleId,
+                        appointmentDate: selectedDateTime.toISOString()
+                    }),
+                    headers: {
+                        'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
+                    },
+                    success: function(data) {
+                        if (data.available) {
+                            availabilityMessage.html('<div class="alert alert-success"><i class="bi bi-check-circle me-2"></i>Khung giờ này có sẵn!</div>');
+                            submitBtn.prop('disabled', false);
+                        } else {
+                            availabilityMessage.html('<div class="alert alert-danger"><i class="bi bi-x-circle me-2"></i>Khung giờ này đã có lịch hẹn khác. Vui lòng chọn thời gian khác.</div>');
+                            submitBtn.prop('disabled', true);
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('Error:', error);
+                        availabilityMessage.html('<div class="alert alert-warning"><i class="bi bi-exclamation-triangle me-2"></i>Không thể kiểm tra khả dụng. Vui lòng thử lại.</div>');
+                        submitBtn.prop('disabled', false);
+                    }
+                });
+            }
+
+            // Form validation and submission
+            $('#bookingForm').on('submit', function(e) {
+                if (hasActiveAppointment) {
+                    e.preventDefault();
+                    alert('Bạn đã có lịch hẹn đang chờ xử lý. Vui lòng hoàn thành hoặc hủy lịch hẹn hiện tại trước khi đặt lịch mới.');
+                    return false;
+                }
+
+                const vehicleId = vehicleSelect.val();
+                const appointmentDate = appointmentDateInput.val();
+                const appointmentTime = appointmentTimeInput.val();
+
+                if (!vehicleId || !appointmentDate || !appointmentTime) {
+                    e.preventDefault();
+                    alert('Vui lòng điền đầy đủ thông tin.');
+                    return false;
+                }
+
+                // Combine date and time for validation
+                const combinedDateTime = appointmentDate + ' ' + appointmentTime;
+                const selectedDateTime = new Date(combinedDateTime);
+                const now = new Date();
+                const oneHourFromNow = new Date(now.getTime() + 60 * 60 * 1000);
+
+                if (selectedDateTime <= oneHourFromNow) {
+                    e.preventDefault();
+                    alert('Vui lòng chọn thời gian ít nhất 1 giờ sau thời điểm hiện tại.');
+                    return false;
+                }
+
+                // Update hidden field with proper datetime format
+                combinedDateTimeInput.val(selectedDateTime.toISOString());
+
+                // Add loading state
+                submitBtn.html('<i class="bi bi-hourglass-split me-2"></i>Đang xử lý...');
+                submitBtn.prop('disabled', true);
+            });
+
+            // Initialize preview if vehicle is preselected
+            if (vehicleSelect.val()) {
+                vehicleSelect.trigger('change');
+            }
+
+            // Disable past times for today
+            appointmentDateInput.on('change', function() {
+                const selectedDate = new Date(this.value);
+                const today = new Date();
+
+                if (selectedDate.toDateString() === today.toDateString()) {
+                    // If today is selected, disable past hours
+                    const currentHour = today.getHours();
+                    appointmentTimeInput.find('option').each(function() {
+                        const optionHour = parseInt(this.value.split(':')[0]);
+                        if (optionHour <= currentHour) {
+                            $(this).prop('disabled', true);
+                        } else {
+                            $(this).prop('disabled', false);
+                        }
+                    });
+                } else {
+                    // Enable all options for future dates
+                    appointmentTimeInput.find('option').prop('disabled', false);
+                }
+            });
+        });
+    </script>
+}

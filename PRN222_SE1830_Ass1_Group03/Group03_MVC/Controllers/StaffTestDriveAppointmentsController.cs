@@ -14,107 +14,209 @@ namespace Group03_MVC.Controllers
 
         public async Task<IActionResult> Index()
         {
-            var dealerIdString = HttpContext.Session.GetString("DealerId");
-            if (string.IsNullOrEmpty(dealerIdString))
+            try
             {
-                return Unauthorized("Dealer ID not found. Please login again.");
-            }
+                var userRole = HttpContext.Session.GetString("Role");
+                
+                // Cho phép tất cả các role staff và admin truy cập
+                if (string.IsNullOrEmpty(userRole) || 
+                    !(userRole == "dealer_manager" || userRole == "evm_staff" || userRole == "dealer_staff" || userRole == "admin"))
+                {
+                    TempData["ErrorMessage"] = "Bạn không có quyền truy cập trang này.";
+                    return RedirectToAction("Index", "Home");
+                }
 
-            var dealerId = Guid.Parse(dealerIdString);
-            var appointments = await _testDriveService.GetAllTestDriveAppointments(dealerId);
-            return View(appointments);
+                List<BusinessObjects.Models.TestDriveAppointment> appointments;
+
+                // Nếu là admin hoặc evm_staff, lấy tất cả lịch hẹn
+                if (userRole == "admin" || userRole == "evm_staff")
+                {
+                    // Tạm thời sử dụng dealerId rỗng để lấy tất cả (cần sửa service)
+                    appointments = await _testDriveService.GetAllTestDriveAppointments(Guid.Empty);
+                }
+                else
+                {
+                    // Với dealer staff, chỉ lấy lịch hẹn của dealer đó
+                    var dealerIdString = HttpContext.Session.GetString("DealerId");
+                    if (string.IsNullOrEmpty(dealerIdString))
+                    {
+                        TempData["ErrorMessage"] = "Không tìm thấy thông tin đại lý.";
+                        return RedirectToAction("Index", "Home");
+                    }
+
+                    var dealerId = Guid.Parse(dealerIdString);
+                    appointments = await _testDriveService.GetAllTestDriveAppointments(dealerId);
+                }
+
+                return View(appointments);
+            }
+            catch (Exception ex)
+            {
+                TempData["ErrorMessage"] = "Có lỗi xảy ra khi tải danh sách lịch hẹn.";
+                return View(new List<BusinessObjects.Models.TestDriveAppointment>());
+            }
         }
 
         public async Task<IActionResult> Details(Guid appointmentId)
         {
-            var dealerIdString = HttpContext.Session.GetString("DealerId");
-            if (string.IsNullOrEmpty(dealerIdString))
+            try
             {
-                return Unauthorized("Dealer ID not found. Please login again.");
-            }
+                var userRole = HttpContext.Session.GetString("Role");
+                
+                // Cho phép tất cả các role staff và admin truy cập
+                if (string.IsNullOrEmpty(userRole) || 
+                    !(userRole == "dealer_manager" || userRole == "evm_staff" || userRole == "dealer_staff" || userRole == "admin"))
+                {
+                    TempData["ErrorMessage"] = "Bạn không có quyền truy cập trang này.";
+                    return RedirectToAction("Index", "Home");
+                }
 
-            var dealerId = Guid.Parse(dealerIdString);
-            var appointment = await _testDriveService.GetAppointmentById(appointmentId);
-            if (appointment == null || appointment.DealerId != dealerId)
+                var appointment = await _testDriveService.GetAppointmentById(appointmentId);
+                
+                if (appointment == null)
+                {
+                    TempData["ErrorMessage"] = "Không tìm thấy lịch hẹn.";
+                    return RedirectToAction(nameof(Index));
+                }
+
+                // Chỉ kiểm tra quyền truy cập với dealer staff
+                if (userRole == "dealer_staff" || userRole == "dealer_manager")
+                {
+                    var dealerIdString = HttpContext.Session.GetString("DealerId");
+                    if (!string.IsNullOrEmpty(dealerIdString))
+                    {
+                        var dealerId = Guid.Parse(dealerIdString);
+                        if (appointment.DealerId != dealerId)
+                        {
+                            TempData["ErrorMessage"] = "Bạn không có quyền truy cập lịch hẹn này.";
+                            return RedirectToAction(nameof(Index));
+                        }
+                    }
+                }
+
+                return View(appointment);
+            }
+            catch (Exception ex)
             {
-                return NotFound();
+                TempData["ErrorMessage"] = "Có lỗi xảy ra khi tải chi tiết lịch hẹn.";
+                return RedirectToAction(nameof(Index));
             }
-
-            return View(appointment);
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> ConfirmAppointment(Guid appointmentId)
         {
-            var dealerIdString = HttpContext.Session.GetString("DealerId");
-            if (string.IsNullOrEmpty(dealerIdString))
+            try
             {
-                return Unauthorized("Dealer ID not found. Please login again.");
-            }
+                var userRole = HttpContext.Session.GetString("Role");
+                
+                // Cho phép tất cả các role staff và admin thực hiện
+                if (string.IsNullOrEmpty(userRole) || 
+                    !(userRole == "dealer_manager" || userRole == "evm_staff" || userRole == "dealer_staff" || userRole == "admin"))
+                {
+                    TempData["ErrorMessage"] = "Bạn không có quyền thực hiện hành động này.";
+                    return RedirectToAction(nameof(Index));
+                }
 
-            var dealerId = Guid.Parse(dealerIdString);
-            var appointment = await _testDriveService.GetAppointmentById(appointmentId);
-            if (appointment == null || appointment.DealerId != dealerId)
-            {
-                return NotFound();
-            }
+                var appointment = await _testDriveService.GetAppointmentById(appointmentId);
+                
+                if (appointment == null)
+                {
+                    TempData["ErrorMessage"] = "Không tìm thấy lịch hẹn.";
+                    return RedirectToAction(nameof(Index));
+                }
 
-            var result = await _testDriveService.BrowseTestDriveAppointments(true, appointmentId);
-            if (result)
-            {
+                // Chỉ kiểm tra quyền truy cập với dealer staff
+                if (userRole == "dealer_staff" || userRole == "dealer_manager")
+                {
+                    var dealerIdString = HttpContext.Session.GetString("DealerId");
+                    if (!string.IsNullOrEmpty(dealerIdString))
+                    {
+                        var dealerId = Guid.Parse(dealerIdString);
+                        if (appointment.DealerId != dealerId)
+                        {
+                            TempData["ErrorMessage"] = "Bạn không có quyền xử lý lịch hẹn này.";
+                            return RedirectToAction(nameof(Index));
+                        }
+                    }
+                }
+
+                var result = await _testDriveService.BrowseTestDriveAppointments(true, appointmentId);
+                if (result)
+                {
+                    TempData["SuccessMessage"] = "Xác nhận lịch hẹn thành công!";
+                }
+                else
+                {
+                    TempData["ErrorMessage"] = "Không thể xác nhận lịch hẹn. Vui lòng thử lại.";
+                }
+
                 return RedirectToAction(nameof(Index));
             }
-            return BadRequest();
+            catch (Exception ex)
+            {
+                TempData["ErrorMessage"] = "Có lỗi xảy ra khi xác nhận lịch hẹn.";
+                return RedirectToAction(nameof(Index));
+            }
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> CancelAppointment(Guid appointmentId)
         {
-            var dealerIdString = HttpContext.Session.GetString("DealerId");
-            if (string.IsNullOrEmpty(dealerIdString))
+            try
             {
-                return Unauthorized("Dealer ID not found. Please login again.");
-            }
+                var userRole = HttpContext.Session.GetString("Role");
+                
+                // Cho phép tất cả các role staff và admin thực hiện
+                if (string.IsNullOrEmpty(userRole) || 
+                    !(userRole == "dealer_manager" || userRole == "evm_staff" || userRole == "dealer_staff" || userRole == "admin"))
+                {
+                    TempData["ErrorMessage"] = "Bạn không có quyền thực hiện hành động này.";
+                    return RedirectToAction(nameof(Index));
+                }
 
-            var dealerId = Guid.Parse(dealerIdString);
-            var appointment = await _testDriveService.GetAppointmentById(appointmentId);
-            if (appointment == null || appointment.DealerId != dealerId)
-            {
-                return NotFound();
-            }
+                var appointment = await _testDriveService.GetAppointmentById(appointmentId);
+                
+                if (appointment == null)
+                {
+                    TempData["ErrorMessage"] = "Không tìm thấy lịch hẹn.";
+                    return RedirectToAction(nameof(Index));
+                }
 
-            var result = await _testDriveService.BrowseTestDriveAppointments(false, appointmentId);
-            if (result)
-            {
+                // Chỉ kiểm tra quyền truy cập với dealer staff
+                if (userRole == "dealer_staff" || userRole == "dealer_manager")
+                {
+                    var dealerIdString = HttpContext.Session.GetString("DealerId");
+                    if (!string.IsNullOrEmpty(dealerIdString))
+                    {
+                        var dealerId = Guid.Parse(dealerIdString);
+                        if (appointment.DealerId != dealerId)
+                        {
+                            TempData["ErrorMessage"] = "Bạn không có quyền xử lý lịch hẹn này.";
+                            return RedirectToAction(nameof(Index));
+                        }
+                    }
+                }
+
+                var result = await _testDriveService.BrowseTestDriveAppointments(false, appointmentId);
+                if (result)
+                {
+                    TempData["SuccessMessage"] = "Hủy lịch hẹn thành công!";
+                }
+                else
+                {
+                    TempData["ErrorMessage"] = "Không thể hủy lịch hẹn. Vui lòng thử lại.";
+                }
+
                 return RedirectToAction(nameof(Index));
             }
-            return BadRequest();
-        }
-
-        [HttpPost]
-        public async Task<IActionResult> CompleteAppointment(Guid appointmentId)
-        {
-            var dealerIdString = HttpContext.Session.GetString("DealerId");
-            if (string.IsNullOrEmpty(dealerIdString))
+            catch (Exception ex)
             {
-                return Unauthorized("Dealer ID not found. Please login again.");
-            }
-
-            var dealerId = Guid.Parse(dealerIdString);
-            var appointment = await _testDriveService.GetAppointmentById(appointmentId);
-            if (appointment == null || appointment.DealerId != dealerId)
-            {
-                return NotFound();
-            }
-
-            var result = await _testDriveService.CompleteTestDriveAppointments(appointmentId);
-            if (result)
-            {
+                TempData["ErrorMessage"] = "Có lỗi xảy ra khi hủy lịch hẹn.";
                 return RedirectToAction(nameof(Index));
             }
-            return BadRequest();
         }
-
-
     }
 }

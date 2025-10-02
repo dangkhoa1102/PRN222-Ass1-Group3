@@ -48,11 +48,7 @@
                                     <div class="card-body">
                                         <table class="table table-borderless">
                                             <tr>
-                                                <td class="fw-bold" style="width: 30%;">Mã lịch hẹn:</td>
-                                                <td><code>@Model.Id</code></td>
-                                            </tr>
-                                            <tr>
-                                                <td class="fw-bold">Ngày tạo:</td>
+                                                <td class="fw-bold" style="width: 30%;">Ngày tạo:</td>
                                                 <td>@(Model.CreatedAt?.ToString("dd/MM/yyyy HH:mm") ?? "Không xác định")</td>
                                             </tr>
                                             <tr>
@@ -172,14 +168,14 @@
                                                 <div class="col-md-4">
                                                     @if (!string.IsNullOrEmpty(Model.Vehicle.Images))
                                                     {
-                                                        <img src="@Model.Vehicle.Images.Split(',')[0].Trim()" 
-                                                             class="img-fluid rounded" 
+                                                        <img src="@Model.Vehicle.Images.Split(',')[0].Trim()"
+                                                             class="img-fluid rounded"
                                                              alt="@Model.Vehicle.Name"
                                                              style="max-height: 200px; object-fit: cover; width: 100%;">
                                                     }
                                                     else
                                                     {
-                                                        <div class="bg-light d-flex align-items-center justify-content-center rounded" 
+                                                        <div class="bg-light d-flex align-items-center justify-content-center rounded"
                                                              style="height: 200px;">
                                                             <i class="bi bi-car-front fs-1 text-muted"></i>
                                                         </div>
@@ -292,22 +288,37 @@
                                     <div class="card-body">
                                         @{
                                             var userRole = Context.Session.GetString("Role");
-                                            var canManage = userRole == "dealer_manager" || userRole == "evm_staff" || userRole == "dealer_staff" || userRole == "admin";
+                                            var canManage = userRole == "dealer_manager" || userRole == "evm_staff" || userRole == "dealer_staff";
                                         }
-                                        
+
                                         @if (canManage && (Model.Status.ToLower() == "pending" || Model.Status.ToLower() == "process"))
                                         {
-                                            <button type="button" class="btn btn-success w-100 mb-2 confirm-btn"
-                                                    data-appointment-id="@Model.Id"
-                                                    data-vehicle-name="@Model.Vehicle?.Name">
-                                                <i class="bi bi-check-circle me-1"></i>Xác nhận lịch hẹn
-                                            </button>
+                                            <form asp-action="ConfirmAppointment" method="post" style="display: inline;" class="w-100 mb-2">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" name="appointmentId" value="@Model.Id" />
+                                                <button type="submit" class="btn btn-success w-100"
+                                                        onclick="return confirm('Bạn có chắc chắn muốn xác nhận lịch hẹn này?')">
+                                                    <i class="bi bi-check-circle me-1"></i>Xác nhận lịch hẹn
+                                                </button>
+                                            </form>
 
-                                            <button type="button" class="btn btn-danger w-100 mb-2 cancel-btn"
-                                                    data-appointment-id="@Model.Id"
-                                                    data-vehicle-name="@Model.Vehicle?.Name">
+                                            <button type="button" class="btn btn-danger w-100 mb-2"
+                                                    data-bs-toggle="modal"
+                                                    data-bs-target="#cancelModal">
                                                 <i class="bi bi-x-circle me-1"></i>Hủy lịch hẹn
                                             </button>
+                                        }
+
+                                        @if (canManage && Model.Status.ToLower() == "confirmed")
+                                        {
+                                            <form asp-action="CompleteAppointment" method="post" style="display: inline;" class="w-100 mb-2">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" name="appointmentId" value="@Model.Id" />
+                                                <button type="submit" class="btn btn-info w-100"
+                                                        onclick="return confirm('Bạn có chắc chắn rằng lịch hẹn này đã hoàn thành?')">
+                                                    <i class="bi bi-check-all me-1"></i>Hoàn thành lịch hẹn
+                                                </button>
+                                            </form>
                                         }
 
                                         <a asp-action="Index" class="btn btn-outline-secondary w-100">
@@ -325,8 +336,7 @@
                                     </div>
                                     <div class="card-body small">
                                         <p><strong>Ngày tạo:</strong> @(Model.CreatedAt?.ToString("dd/MM/yyyy HH:mm") ?? "Không xác định")</p>
-                                        <p><strong>Cập nhật cuối:</strong> @(Model.UpdatedAt?.ToString("dd/MM/yyyy HH:mm") ?? "Không xác định")</p>
-                                        <p class="mb-0"><strong>Mã ID:</strong> <code>@Model.Id</code></p>
+                                        <p class="mb-0"><strong>Cập nhật cuối:</strong> @(Model.UpdatedAt?.ToString("dd/MM/yyyy HH:mm") ?? "Không xác định")</p>
                                     </div>
                                 </div>
                             </div>
@@ -349,56 +359,36 @@
     </div>
 </div>
 
-<!-- Hidden Forms -->
-<form id="confirmForm" asp-action="ConfirmAppointment" method="post" style="display: none;">
-    @Html.AntiForgeryToken()
-    <input type="hidden" id="confirmAppointmentId" name="appointmentId" />
-</form>
-
-<form id="cancelForm" asp-action="CancelAppointment" method="post" style="display: none;">
-    @Html.AntiForgeryToken()
-    <input type="hidden" id="cancelAppointmentId" name="appointmentId" />
-</form>
-
-@section Scripts {
-    <script>
-        $(document).ready(function() {
-            // Xử lý nút xác nhận
-            $('.confirm-btn').on('click', function() {
-                var appointmentId = $(this).data('appointment-id');
-                var vehicleName = $(this).data('vehicle-name') || 'xe này';
-                
-                if (confirm(`Bạn có chắc chắn muốn xác nhận lịch hẹn lái thử ${vehicleName}?`)) {
-                    // Disable button và show loading
-                    $(this).prop('disabled', true)
-                           .html('<span class="spinner-border spinner-border-sm me-1"></span>Đang xử lý...');
-                    
-                    // Set appointmentId và submit
-                    $('#confirmAppointmentId').val(appointmentId);
-                    $('#confirmForm').submit();
-                }
-            });
-
-            // Xử lý nút hủy
-            $('.cancel-btn').on('click', function() {
-                var appointmentId = $(this).data('appointment-id');
-                var vehicleName = $(this).data('vehicle-name') || 'xe này';
-                
-                if (confirm(`Bạn có chắc chắn muốn hủy lịch hẹn lái thử ${vehicleName}? Hành động này không thể hoàn tác.`)) {
-                    // Disable button và show loading
-                    $(this).prop('disabled', true)
-                           .html('<span class="spinner-border spinner-border-sm me-1"></span>Đang hủy...');
-                    
-                    // Set appointmentId và submit
-                    $('#cancelAppointmentId').val(appointmentId);
-                    $('#cancelForm').submit();
-                }
-            });
-
-            // Auto hide alerts after 5 seconds
-            setTimeout(function() {
-                $('.alert').alert('close');
-            }, 5000);
-        });
-    </script>
+<!-- Modal xác nhận hủy lịch hẹn -->
+@if (Model != null && (Model.Status.ToLower() == "pending" || Model.Status.ToLower() == "process"))
+{
+    <div class="modal fade" id="cancelModal" tabindex="-1" aria-labelledby="cancelModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="cancelModalLabel">Xác nhận hủy lịch hẹn</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-warning">
+                        <i class="bi bi-exclamation-triangle me-2"></i>
+                        <strong>Cảnh báo:</strong> Hành động này không thể hoàn tác!
+                    </div>
+                    <p>Bạn có chắc chắn muốn hủy lịch hẹn lái thử xe <strong>@Model.Vehicle?.Name</strong> vào ngày <strong>@Model.AppointmentDate.ToString("dd/MM/yyyy HH:mm")</strong>?</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="bi bi-x me-1"></i>Đóng
+                    </button>
+                    <form asp-action="CancelAppointment" method="post" style="display: inline;">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="appointmentId" value="@Model.Id" />
+                        <button type="submit" class="btn btn-danger" onclick="return confirm('Xác nhận hủy lịch hẹn?')">
+                            <i class="bi bi-check me-1"></i>Xác nhận hủy
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
 }
