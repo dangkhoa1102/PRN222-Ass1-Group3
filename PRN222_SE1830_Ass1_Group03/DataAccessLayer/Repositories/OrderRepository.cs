@@ -6,9 +6,38 @@ using BusinessObjects.DTO;
 using BusinessObjects.Models;
 using Microsoft.EntityFrameworkCore;
 
-
 namespace DataAccessLayer.Repositories
 {
+    public interface IOderRepository    
+    {
+        // Basic CRUD operations
+        Task<List<Order>> GetAll();
+        Task<Order?> GetById(Guid id);
+        Task<bool> Add(Order order);
+        Task<bool> Update(Order order);
+        Task<bool> Delete(Guid id);
+
+        // Order filtering operations
+        Task<List<Order>> GetByCustomerId(Guid customerId);
+        Task<List<Order>> GetByStatus(string status);
+        Task<List<Order>> GetOrderByUserId(Guid id);
+        Task<List<OrderDTO>> GetOrdersByDealerAsync(Guid dealerId);
+        Task<List<OrderDTO>> GetOrdersByCreatorAsync(Guid creatorUserId);
+        Task<List<OrderDTO>> GetAllOrdersAsync();
+        
+        // Specific order operations
+        Task<OrderDTO?> GetOrderByIdAsync(Guid orderId);
+        Task<Guid> CreateOrderAsync(CreateOrderRequest req, Guid dealerId, Guid createdByUserId);
+        Task<bool> UpdateOrderAsync(UpdateOrderRequest req, Guid updatedByUserId);
+        Task<bool> SoftDeleteOrderAsync(Guid orderId, Guid deletedByUserId);
+        Task<bool> AddOrderHistory(Guid orderId, string status, string notes, Guid createdBy);
+        Task<bool> IsOrderCreatedByUserAsync(Guid orderId, Guid userId);
+        
+        // Vehicle-related operations
+        Task<List<Vehicle>> GetAvailableVehiclesAsync();
+        Task<List<VehicleSalesStats>> GetVehicleSalesStatsAsync();
+    }
+
     public class OrderRepository : IOrderRepository
     {
         private readonly Vehicle_Dealer_ManagementContext _context;
@@ -18,15 +47,78 @@ namespace DataAccessLayer.Repositories
             _context = context;
         }
 
-        public async Task<List<Order>> GetOrderByUserId(Guid id)
+        public async Task<List<Order>> GetAll()
         {
             return await _context.Orders
-                .Where(o => o.CustomerId == id)   // hoặc CreatedBy == id, tùy logic
+                .Include(o => o.Customer)
+                .Include(o => o.Vehicle)
+                .Include(o => o.Dealer)
+                .OrderByDescending(o => o.CreatedAt)
                 .ToListAsync();
         }
 
+        public async Task<List<Order>> GetByStatus(string status)
+        {
+            return await _context.Orders
+                .Include(o => o.Customer)
+                .Include(o => o.Vehicle)
+                .Include(o => o.Dealer)
+                .Where(o => o.Status == status)
+                .OrderByDescending(o => o.CreatedAt)
+                .ToListAsync();
+        }
 
-        // Lấy orders theo dealer (đây là cách bạn show orders cho staff: staff.dealer_id == orders.dealer_id)
+        public async Task<List<Order>> GetByCustomerId(Guid customerId)
+        {
+            return await _context.Orders
+                .Include(o => o.Customer)
+                .Include(o => o.Vehicle)
+                .Include(o => o.Dealer)
+                .Where(o => o.CustomerId == customerId)
+                .OrderByDescending(o => o.CreatedAt)
+                .ToListAsync();
+        }
+
+        public async Task<Order?> GetById(Guid id)
+        {
+            return await _context.Orders
+                .Include(o => o.Customer)
+                .Include(o => o.Vehicle)
+                .Include(o => o.Dealer)
+                .Include(o => o.OrderHistories)
+                .FirstOrDefaultAsync(o => o.Id == id);
+        }
+
+        public async Task<bool> Add(Order order)
+        {
+            _context.Orders.Add(order);
+            return await _context.SaveChangesAsync() > 0;
+        }
+
+        public async Task<bool> Update(Order order)
+        {
+            _context.Orders.Update(order);
+            return await _context.SaveChangesAsync() > 0;
+        }
+
+        public async Task<bool> Delete(Guid id)
+        {
+            var order = await _context.Orders.FindAsync(id);
+            if (order != null)
+            {
+                _context.Orders.Remove(order);
+                return await _context.SaveChangesAsync() > 0;
+            }
+            return false;
+        }
+
+        public async Task<List<Order>> GetOrderByUserId(Guid id)
+        {
+            return await _context.Orders
+                .Where(o => o.CustomerId == id)
+                .ToListAsync();
+        }
+
         public async Task<List<OrderDTO>> GetOrdersByDealerAsync(Guid dealerId)
         {
             return await _context.Orders
@@ -56,7 +148,6 @@ namespace DataAccessLayer.Repositories
                 .ToListAsync();
         }
 
-        // Lấy orders do một nhân viên tạo (dựa vào lịch sử tạo đầu tiên)
         public async Task<List<OrderDTO>> GetOrdersByCreatorAsync(Guid creatorUserId)
         {
             return await _context.Orders
@@ -87,7 +178,6 @@ namespace DataAccessLayer.Repositories
                 .ToListAsync();
         }
 
-        // Dành cho evm_staff: lấy tất cả orders
         public async Task<List<OrderDTO>> GetAllOrdersAsync()
         {
             return await _context.Orders
@@ -146,10 +236,8 @@ namespace DataAccessLayer.Repositories
             };
         }
 
-        // Tạo order: tạo customer nếu cần, gán dealerId = dealerId (lấy từ staff)
         public async Task<Guid> CreateOrderAsync(CreateOrderRequest req, Guid dealerId, Guid createdByUserId)
         {
-            // 1) tìm hoặc tạo customer
             User customer = null;
             if (req.CustomerId.HasValue)
             {
@@ -158,14 +246,12 @@ namespace DataAccessLayer.Repositories
 
             if (customer == null)
             {
-                // try find by phone
                 customer = await _context.Users.FirstOrDefaultAsync(u => u.Phone == req.CustomerPhone && u.Role == "customer");
             }
 
             if (customer == null)
             {
                 var generatedUserName = $"cust_{Guid.NewGuid().ToString().Substring(0, 8)}";
-                // Ensure required fields (Email, Password) are non-null to satisfy DB constraints
                 var safeEmail = $"{generatedUserName}@autodeal.local";
                 var safePassword = Guid.NewGuid().ToString("N");
 
@@ -186,7 +272,6 @@ namespace DataAccessLayer.Repositories
                 await _context.SaveChangesAsync();
             }
 
-            // 2) tạo order
             var order = new Order
             {
                 Id = Guid.NewGuid(),
@@ -195,7 +280,7 @@ namespace DataAccessLayer.Repositories
                 DealerId = dealerId,
                 VehicleId = req.VehicleId,
                 TotalAmount = req.TotalAmount,
-                Status = "processing",      // bắt đầu là processing (bạn có thể đổi)
+                Status = "processing",
                 PaymentStatus = "unpaid",
                 Notes = req.Notes,
                 CreatedAt = DateTime.UtcNow,
@@ -205,7 +290,6 @@ namespace DataAccessLayer.Repositories
             _context.Orders.Add(order);
             await _context.SaveChangesAsync();
 
-            // 3) ghi lịch sử vào order_history
             var hist = new OrderHistory
             {
                 Id = Guid.NewGuid(),
@@ -221,7 +305,6 @@ namespace DataAccessLayer.Repositories
             return order.Id;
         }
 
-        // Update đơn (status/payment/vehicle/total/notes)
         public async Task<bool> UpdateOrderAsync(UpdateOrderRequest req, Guid updatedByUserId)
         {
             var order = await _context.Orders.FindAsync(req.Id);
@@ -251,7 +334,6 @@ namespace DataAccessLayer.Repositories
             return true;
         }
 
-        // Soft delete: set status = cancelled + history
         public async Task<bool> SoftDeleteOrderAsync(Guid orderId, Guid deletedByUserId)
         {
             var order = await _context.Orders.FindAsync(orderId);
@@ -279,18 +361,32 @@ namespace DataAccessLayer.Repositories
         public async Task<List<Vehicle>> GetAvailableVehiclesAsync()
         {
             return await _context.Vehicles
-                .Where(v => v.IsActive == true)   // EF property likely IsActive
+                .Where(v => v.IsActive == true)
                 .ToListAsync();
         }
 
-        // Kiểm tra đơn có được tạo bởi user này hay không
         public async Task<bool> IsOrderCreatedByUserAsync(Guid orderId, Guid userId)
         {
             return await _context.OrderHistories
                 .AnyAsync(h => h.OrderId == orderId && h.CreatedBy == userId && h.Notes == "Created by staff");
         }
 
-        // Thống kê xe bán chạy
+        public async Task<bool> AddOrderHistory(Guid orderId, string status, string notes, Guid createdBy)
+        {
+            var orderHistory = new OrderHistory
+            {
+                Id = Guid.NewGuid(),
+                OrderId = orderId,
+                Status = status,
+                Notes = notes,
+                CreatedBy = createdBy,
+                CreatedAt = DateTime.UtcNow
+            };
+
+            _context.OrderHistories.Add(orderHistory);
+            return await _context.SaveChangesAsync() > 0;
+        }
+
         public async Task<List<VehicleSalesStats>> GetVehicleSalesStatsAsync()
         {
             return await _context.Orders
