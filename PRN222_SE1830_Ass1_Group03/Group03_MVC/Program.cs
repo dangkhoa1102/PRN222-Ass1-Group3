@@ -1,35 +1,30 @@
-﻿using BusinessObjects.DTO;
+﻿using BusinessObjects.Models;              // giữ DbContext chuẩn
 using DataAccessLayer;
+using DataAccessLayer.Repositories;        // repo ở đây
 using Microsoft.EntityFrameworkCore;
 using Services;
 using Services.Service;
-using DataAccessLayer.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
 builder.Services.AddControllersWithViews();
-builder.Services.AddSession(options =>
-{
-    options.IdleTimeout = TimeSpan.FromMinutes(30);
-    options.Cookie.HttpOnly = true;
-    options.Cookie.IsEssential = true;
-});
+builder.Services.AddDistributedMemoryCache();
+builder.Services.AddSession();
 
-// Register DbContext first
+// Đăng ký DbContext (chỉ lấy từ BusinessObjects.Models)
 builder.Services.AddDbContext<Vehicle_Dealer_ManagementContext>(options =>
-{
-    options.UseSqlServer(builder.Configuration.GetConnectionString("MyDbConnection"));
-});
+    options.UseSqlServer(builder.Configuration.GetConnectionString("MyDbConnection")));
 
 // Register DAOs and Repositories (these depend on DbContext)
 builder.Services.AddScoped<IAccountRepository, AccountRepository>();
+builder.Services.AddScoped<IOrderRepository, OrderRepository>();
 builder.Services.AddScoped<IVehicleRepository, VehicleRepository>();
 builder.Services.AddScoped<IOrderRepository, OrderRepository>();
 builder.Services.AddScoped<IDealerRepository, DealerRepository>();
 builder.Services.AddScoped<ITestDriveApoitmentRepository, StaffTestDriveAppoitmentRepository>();
+//builder.Services.AddScoped<AccountDao>();
 
-// Register Services (these depend on DAOs/Repositories)
+// Services
 builder.Services.AddScoped<IAccountService, AccountService>();
 builder.Services.AddScoped<IVehicleService, VehicleService>();
 builder.Services.AddScoped<IOrderService, OrderService>();
@@ -38,7 +33,7 @@ builder.Services.AddScoped<ITestDriveAppointmentService, StaffTestDriveAppointme
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+// Middleware pipeline
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
@@ -47,13 +42,11 @@ if (!app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
-
 app.UseRouting();
 app.UseAuthentication();
-app.UseAuthorization();
 app.UseSession();
+app.UseAuthorization();
 
-// Set default route to login
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Account}/{action=Login}/{id?}");

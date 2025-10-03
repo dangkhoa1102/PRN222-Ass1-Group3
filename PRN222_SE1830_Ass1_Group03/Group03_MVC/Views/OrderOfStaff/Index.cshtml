@@ -1,0 +1,149 @@
+﻿@model List<BusinessObjects.DTO.OrderDTO>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="mb-0"><i class="fas fa-list"></i> Danh sách đơn hàng</h2>
+    <a asp-controller="OrderOfStaff" asp-action="Create" class="btn btn-primary">
+        <i class="fas fa-plus"></i> Tạo đơn hàng mới
+    </a>
+    
+</div>
+
+<form method="get" class="row g-3 mb-4">
+    <div class="col-md-6">
+        <label class="form-label">Trạng thái</label>
+        <select name="status" class="form-select">
+            <option value="">-- Tất cả --</option>
+            @if (ViewBag.FilterStatus == "processing")
+            {
+                <option value="processing" selected>processing</option>
+            }
+            else
+            {
+                <option value="processing">processing</option>
+            }
+            @if (ViewBag.FilterStatus == "completed")
+            {
+                <option value="completed" selected>completed</option>
+            }
+            else
+            {
+                <option value="completed">completed</option>
+            }
+            @if (ViewBag.FilterStatus == "cancelled")
+            {
+                <option value="cancelled" selected>cancelled</option>
+            }
+            else
+            {
+                <option value="cancelled">cancelled</option>
+            }
+        </select>
+    </div>
+    <div class="col-md-6 d-flex align-items-end gap-2">
+        <button type="submit" class="btn btn-outline-primary"><i class="bi bi-funnel"></i> Lọc</button>
+        <a class="btn btn-outline-secondary" asp-action="Index">Bỏ lọc</a>
+    </div>
+</form>
+
+<!-- Thống kê xe bán chạy -->
+@if (ViewBag.VehicleStats != null && ((List<DataAccessLayer.Repositories.VehicleSalesStats>)ViewBag.VehicleStats).Any())
+{
+    <div class="card mb-4">
+        <div class="card-header bg-info text-white">
+            <h5 class="mb-0"><i class="bi bi-graph-up"></i> Top xe bán chạy</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                @foreach (var stat in (List<DataAccessLayer.Repositories.VehicleSalesStats>)ViewBag.VehicleStats)
+                {
+                    <div class="col-md-6 col-lg-4 mb-3">
+                        <div class="card border-0 shadow-sm">
+                            <div class="card-body">
+                                <h6 class="card-title text-primary">@stat.VehicleName</h6>
+                                <div class="d-flex justify-content-between">
+                                    <small class="text-muted">Số đơn:</small>
+                                    <span class="badge bg-primary">@stat.TotalOrders</span>
+                                </div>
+                                <div class="d-flex justify-content-between">
+                                    <small class="text-muted">Doanh thu:</small>
+                                    <span class="text-success fw-bold">@stat.TotalRevenue.ToString("N0") ₫</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+}
+
+<div class="row">
+    @foreach (var order in Model)
+    {
+        <div class="col-md-4 mb-4">
+            <div class="card shadow-sm border-0 rounded-3 h-100">
+                <div class="card-body">
+                    <h5 class="card-title text-primary">
+                        <i class="fas fa-file-invoice"></i> Đơn #@order.OrderNumber
+                    </h5>
+                    <p><i class="fas fa-user"></i> Khách hàng: <strong>@order.CustomerName</strong></p>
+                    <p><i class="fas fa-car"></i> Xe: <strong>@order.VehicleName</strong></p>
+                    <p><i class="fas fa-money-bill"></i> Tổng: @order.TotalAmount.ToString("N0") ₫</p>
+                    <p>
+                        <span class="badge bg-info">@order.Status</span>
+                        <span class="badge bg-success">@order.PaymentStatus</span>
+                    </p>
+                    <small><i class="far fa-calendar"></i> @order.CreatedAt?.ToString("dd/MM/yyyy")</small>
+                </div>
+                <div class="card-footer d-flex justify-content-between bg-light">
+                    <a asp-action="Details" asp-route-id="@order.Id" class="btn btn-sm btn-outline-primary">
+                        <i class="fas fa-eye"></i> Chi tiết
+                    </a>
+                    <a asp-action="Edit" asp-route-id="@order.Id" class="btn btn-sm btn-outline-warning">
+                        <i class="fas fa-edit"></i> Sửa
+                    </a>
+                    <button type="button" class="btn btn-sm btn-outline-danger btn-delete"
+                            data-id="@order.Id" data-order="@order.OrderNumber"
+                            data-bs-toggle="modal" data-bs-target="#deleteModal">
+                        <i class="fas fa-trash"></i> Xóa
+                    </button>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+<!-- Delete Modal chung -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="post" id="deleteForm">
+                @Html.AntiForgeryToken()
+                <div class="modal-header">
+                    <h5 class="modal-title text-danger">Xác nhận xóa</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Bạn có chắc chắn muốn hủy đơn <strong id="deleteOrderNumber"></strong>?</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                    <button type="submit" class="btn btn-danger">Xóa</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.querySelectorAll('.btn-delete').forEach(btn => {
+            btn.addEventListener('click', function () {
+                let id = this.dataset.id;
+                let orderNum = this.dataset.order;
+                document.getElementById('deleteOrderNumber').innerText = orderNum;
+                document.getElementById('deleteForm').action = '/OrderOfStaff/Delete/' + id;
+            });
+        });
+    </script>
+}
