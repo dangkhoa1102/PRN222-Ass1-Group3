@@ -17,6 +17,17 @@
                 <a href="@Url.Action("Index", "Vehicle")" class="btn-hero btn-hero-primary">
                     Xem danh sách xe
                 </a>
+                @{
+                    var role = Context.Session.GetString("Role");
+                    var userId = Context.Session.GetString("UserId");
+                }
+
+                <a href="@(role == "customer"
+                                                  ? Url.Action("MyOrders", "Order", new { customerId = userId })
+                                                  : Url.Action("Index", "Order"))"
+                   class="btn-hero btn-hero-primary">
+                    Quản lý đơn hàng
+                </a>
                 @* <a href="@Url.Action("Register", "Account")" class="btn-hero btn-hero-secondary">
                     Đăng ký ngay
                 </a> *@

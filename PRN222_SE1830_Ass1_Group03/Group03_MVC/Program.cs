@@ -19,6 +19,8 @@ builder.Services.AddDbContext<Vehicle_Dealer_ManagementContext>(options =>
 builder.Services.AddScoped<IAccountRepository, AccountRepository>();
 builder.Services.AddScoped<IOrderRepository, OrderRepository>();
 builder.Services.AddScoped<IVehicleRepository, VehicleRepository>();
+builder.Services.AddScoped<IOrderRepository, OrderRepository>();
+builder.Services.AddScoped<IDealerRepository, DealerRepository>();
 builder.Services.AddScoped<ITestDriveApoitmentRepository, StaffTestDriveAppoitmentRepository>();
 //builder.Services.AddScoped<AccountDao>();
 
@@ -26,6 +28,7 @@ builder.Services.AddScoped<ITestDriveApoitmentRepository, StaffTestDriveAppoitme
 builder.Services.AddScoped<IAccountService, AccountService>();
 builder.Services.AddScoped<IVehicleService, VehicleService>();
 builder.Services.AddScoped<IOrderService, OrderService>();
+builder.Services.AddScoped<IDealerService, DealerService>();
 builder.Services.AddScoped<ITestDriveAppointmentService, StaffTestDriveAppointmentService>();
 
 var app = builder.Build();

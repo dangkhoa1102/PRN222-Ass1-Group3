@@ -10,11 +10,14 @@ namespace Group03_MVC.Controllers
     {
         private readonly IVehicleService _vehicleService;
         private readonly IWebHostEnvironment _webHostEnvironment;
+        private readonly IDealerService _dealerService;
 
-        public VehicleController(IVehicleService vehicleService, IWebHostEnvironment webHostEnvironment)
+        public VehicleController(IVehicleService vehicleService, IWebHostEnvironment webHostEnvironment, IDealerService dealerService)
         {
             _vehicleService = vehicleService;
             _webHostEnvironment = webHostEnvironment;
+            _dealerService = dealerService;
+
         }
 
         // Tất cả user đã đăng nhập đều có thể xem danh sách xe
@@ -251,6 +254,9 @@ namespace Group03_MVC.Controllers
                     Images = vehicle.Images,
                     StockQuantity = vehicle.StockQuantity
                 };
+
+                var dealers = await _dealerService.GetAllDealers();
+                ViewBag.Dealers = dealers;
 
                 // Pass user role to view for conditional rendering
                 ViewBag.UserRole = HttpContext.Session.GetString("Role");

@@ -202,5 +202,29 @@ namespace DataAccessLayer.Repositories
                 throw new Exception($"VehicleRepo ERROR: {ex.Message}", ex);
             }
         }
+        public async Task<bool> UpdateStock(Guid vehicleId, int newStock)
+        {
+            try
+            {
+                if (vehicleId == Guid.Empty)
+                    throw new ArgumentException("Invalid vehicle ID");
+
+                var vehicle = await _context.Vehicles.FindAsync(vehicleId);
+                if (vehicle == null)
+                    return false;
+
+                if (newStock < 0)
+                    throw new ArgumentException("Stock quantity cannot be negative");
+
+                vehicle.StockQuantity = newStock;
+                _context.Vehicles.Update(vehicle);
+                var result = await _context.SaveChangesAsync();
+                return result > 0;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"VehicleRepo ERROR: {ex.Message}", ex);
+            }
+        }
     }
 }

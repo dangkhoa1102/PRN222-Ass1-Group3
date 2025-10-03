@@ -34,4 +34,5 @@ public partial class Vehicle
     public virtual ICollection<Order> Orders { get; set; } = new List<Order>();
 
     public virtual ICollection<TestDriveAppointment> TestDriveAppointments { get; set; } = new List<TestDriveAppointment>();
+
 }
