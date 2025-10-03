@@ -19,6 +19,36 @@ namespace Group03_MVC.Controllers
             _dealerService = dealerService;
         }
 
+        // Thêm action History để xử lý URL /Order/History
+        public async Task<IActionResult> History()
+        {
+            // Kiểm tra đăng nhập
+            var userIdStr = HttpContext.Session.GetString("UserId");
+            if (string.IsNullOrEmpty(userIdStr))
+            {
+                return RedirectToAction("Login", "Account");
+            }
+
+            // Chỉ cho phép customer xem lịch sử đơn hàng của mình
+            var role = HttpContext.Session.GetString("Role");
+            if (role != "customer")
+            {
+                return RedirectToAction("Forbidden", "Home");
+            }
+
+            try
+            {
+                var customerId = Guid.Parse(userIdStr);
+                var orders = await _orderService.GetCustomerOrders(customerId);
+                return View(orders);
+            }
+            catch (Exception ex)
+            {
+                TempData["ErrorMessage"] = $"Lỗi khi tải lịch sử đơn hàng: {ex.Message}";
+                return RedirectToAction("Index", "Home");
+            }
+        }
+
         // Customer: View their orders
         public async Task<IActionResult> MyOrders(Guid customerId, string? status, string? paymentStatus, DateTime? fromDate, DateTime? toDate)
         {
@@ -56,34 +86,52 @@ namespace Group03_MVC.Controllers
             return RedirectToAction("MyOrders", new { customerId });
         }
 
-        // Customer: Create new order
+        // Customer: Create new order - CẢI THIỆN XỬ LÝ NOTES
         [HttpPost]
         [ValidateAntiForgeryToken]
         [RoleAuthorization("customer")]
-        public async Task<IActionResult> CreateOrder([FromForm] CreateOrderDTO dto)
+        public async Task<IActionResult> CreateOrder(Guid VehicleId, Guid DealerId, string? Notes)
         {
             var userIdStr = HttpContext.Session.GetString("UserId");
             if (string.IsNullOrEmpty(userIdStr))
                 return RedirectToAction("Login", "Account");
 
-            // Gán CustomerId từ session
-            dto.CustomerId = Guid.Parse(userIdStr);
-
-            if (!ModelState.IsValid)
-                return RedirectToAction("Details", "Vehicle", new { id = dto.VehicleId });
-
-            var success = await _orderService.CreateOrder(dto);
-            if (success)
+            try
             {
-                TempData["SuccessMessage"] = "Đơn hàng đã được tạo thành công!";
-                return RedirectToAction(nameof(MyOrders), new { customerId = dto.CustomerId });
+                var customerId = Guid.Parse(userIdStr);
+                
+                // Tạo DTO với xử lý Notes an toàn
+                var dto = new CreateOrderDTO
+                {
+                    CustomerId = customerId,
+                    VehicleId = VehicleId,
+                    DealerId = DealerId,
+                    Notes = string.IsNullOrWhiteSpace(Notes) ? "Không có ghi chú" : Notes.Trim()
+                };
+
+                // Validate required fields
+                if (dto.VehicleId == Guid.Empty || dto.DealerId == Guid.Empty)
+                {
+                    TempData["ErrorMessage"] = "Vui lòng chọn đầy đủ thông tin xe và đại lý.";
+                    return RedirectToAction("Details", "Vehicle", new { id = VehicleId });
+                }
+
+                var success = await _orderService.CreateOrder(dto);
+                if (success)
+                {
+                    TempData["SuccessMessage"] = "Đơn hàng đã được tạo thành công!";
+                    return RedirectToAction(nameof(History));
+                }
+
+                TempData["ErrorMessage"] = "Số lượng xe đã hết nên không thể tạo đơn hàng. Vui lòng chọn xe khác.";
+                return RedirectToAction("Details", "Vehicle", new { id = VehicleId });
             }
-
-            TempData["ErrorMessage"] = "Số lượng xe đã hết nên không thể tạo đơn hàng. Vui lòng chọn xe khác.";
-            return RedirectToAction("Details", "Vehicle", new { id = dto.VehicleId });
+            catch (Exception ex)
+            {
+                TempData["ErrorMessage"] = $"Có lỗi xảy ra: {ex.Message}";
+                return RedirectToAction("Details", "Vehicle", new { id = VehicleId });
+            }
         }
-
-
 
         // Staff: Confirm order
         [HttpPost]
@@ -130,7 +178,6 @@ namespace Group03_MVC.Controllers
             return View(order);
         }
 
-
         // API endpoints for AJAX calls
         [HttpGet]
         public async Task<IActionResult> GetOrderDetails(Guid id)
@@ -173,6 +220,5 @@ namespace Group03_MVC.Controllers
 
             return View(vm);
         }
-
     }
 }

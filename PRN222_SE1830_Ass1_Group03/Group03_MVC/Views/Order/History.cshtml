@@ -1,39 +1,96 @@
-﻿@model List<Order> 
+﻿    @model List<BusinessObjects.DTO.OrderDTO>
 @{
- 
     ViewData["Title"] = "Lịch sử đơn hàng";
- 
 }
 
 <div class="container mt-5">
-    <h1 class="mb-4">Lịch sử Đơn hàng</h1>
+    <h1 class="mb-4">
+        <i class="bi bi-clock-history me-2"></i>Lịch sử Đơn hàng
+    </h1>
+    
     @if(Model == null || !Model.Any())
     {
-        <div class="alert alert-info">Bạn chưa có đơn hàng nào.</div>
+        <div class="alert alert-info">
+            <i class="bi bi-info-circle me-2"></i>Bạn chưa có đơn hàng nào.
+        </div>
+        <a asp-controller="Vehicle" asp-action="Index" class="btn btn-primary">
+            <i class="bi bi-car-front me-2"></i>Xem danh sách xe
+        </a>
     }
     else
     {
-        <table class="table table-bordered table-striped">
-            <thead class="table-dark">
-                <tr>
-                    <th>Tên Xe</th>
-                    <th>Ngày đặt</th>
-                    <th>Tổng tiền</th>
-                    <th>Trạng thái</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var order in Model)
-                {
-                    <tr>
-                        <td>@order.Vehicle.Name</td>
-                        <td>@order.CreatedAt</td>
-                        <td>@order.TotalAmount</td>
-                        <td>@order.Status</td>
-                    </tr>
-                }
-            </tbody>
-        </table>
+        <div class="card">
+            <div class="card-body">
+                <table class="table table-bordered table-striped">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Mã đơn hàng</th>
+                            <th>Tên Xe</th>
+                            <th>Đại lý</th>
+                            <th>Ngày đặt</th>
+                            <th>Tổng tiền</th>
+                            <th>Trạng thái</th>
+                            <th>Thanh toán</th>
+                            <th>Ghi chú</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var order in Model)
+                        {
+                            <tr>
+                                <td>
+                                    <strong>@order.OrderNumber</strong>
+                                </td>
+                                <td>@order.VehicleName</td>
+                                <td>@order.DealerName</td>
+                                <td>@(order.CreatedAt?.ToString("dd/MM/yyyy HH:mm") ?? "N/A")</td>
+                                <td class="text-danger fw-bold">@order.TotalAmount.ToString("C0", new System.Globalization.CultureInfo("vi-VN"))</td>
+                                <td>
+                                    @switch(order.Status?.ToLower())
+                                    {
+                                        case "processing":
+                                            <span class="badge bg-warning">Đang xử lý</span>
+                                            break;
+                                        case "completed":
+                                            <span class="badge bg-success">Hoàn thành</span>
+                                            break;
+                                        case "rejected":
+                                            <span class="badge bg-danger">Từ chối</span>
+                                            break;
+                                        default:
+                                            <span class="badge bg-secondary">@order.Status</span>
+                                            break;
+                                    }
+                                </td>
+                                <td>
+                                    @switch(order.PaymentStatus?.ToLower())
+                                    {
+                                        case "paid":
+                                            <span class="badge bg-success">Đã thanh toán</span>
+                                            break;
+                                        case "unpaid":
+                                            <span class="badge bg-warning">Chưa thanh toán</span>
+                                            break;
+                                        default:
+                                            <span class="badge bg-secondary">@order.PaymentStatus</span>
+                                            break;
+                                    }
+                                </td>
+                                <td>@(string.IsNullOrEmpty(order.Notes) ? "Không có ghi chú" : order.Notes)</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <div class="mt-3">
+            <a asp-controller="Vehicle" asp-action="Index" class="btn btn-primary">
+                <i class="bi bi-car-front me-2"></i>Tiếp tục mua sắm
+            </a>
+            <a asp-controller="Order" asp-action="Index" class="btn btn-outline-secondary">
+                <i class="bi bi-speedometer2 me-2"></i>Dashboard đơn hàng
+            </a>
+        </div>
     }
-
 </div>

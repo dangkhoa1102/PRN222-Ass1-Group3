@@ -166,21 +166,21 @@
                                 <div class="alert alert-success">@TempData["SuccessMessage"]</div>
                             }
 
-                            @* Nút đăng ký mua xe - chỉ cho khách hàng *@
+                            @* Nút đăng ký mua xe - chỉ cho khách hàng - FORM CẢI THIỆN *@
                             @{
                                 var role = Context.Session.GetString("Role");
                                 var customerId = Context.Session.GetString("UserId");
                             }
                             @if (role == "customer")
                             {
-                                <form asp-action="CreateOrder" asp-controller="Order" method="post">
+                                <form asp-action="CreateOrder" asp-controller="Order" method="post" novalidate>
                                     @Html.AntiForgeryToken()
 
                                     <input type="hidden" name="VehicleId" value="@Model.Id" />
 
                                     <div class="form-group">
-                                        <label>Chọn đại lý</label>
-                                        <select name="DealerId" class="form-control" required>
+                                        <label for="DealerId">Chọn đại lý <span class="text-danger">*</span></label>
+                                        <select name="DealerId" id="DealerId" class="form-control" required>
                                             <option value="">-- Chọn đại lý --</option>
                                             @foreach (var dealer in ViewBag.Dealers as List<BusinessObjects.Models.Dealer>)
                                             {
@@ -190,11 +190,19 @@
                                     </div>
 
                                     <div class="form-group mt-2">
-                                        <label>Ghi chú</label>
-                                        <textarea name="Notes" class="form-control"></textarea>
+                                        <label for="Notes">Ghi chú (tùy chọn)</label>
+                                        <textarea name="Notes" id="Notes" class="form-control" 
+                                                  rows="3" 
+                                                  placeholder="Nhập ghi chú nếu có..."></textarea>
+                                        <small class="form-text text-muted">
+                                            <i class="bi bi-info-circle me-1"></i>
+                                            Ghi chú không bắt buộc. Có thể để trống.
+                                        </small>
                                     </div>
 
-                                    <button type="submit" class="btn btn-primary mt-3">Đặt xe</button>
+                                    <button type="submit" class="btn btn-primary mt-3" onclick="return validateOrderForm()">
+                                        <i class="bi bi-cart-plus me-2"></i>Đặt xe
+                                    </button>
                                 </form>
                             }
                         </div>
@@ -220,3 +228,19 @@
         </div>
     </div>
 </div>
+
+@section Scripts {
+    <script>
+        function validateOrderForm() {
+            const dealerId = document.getElementById('DealerId').value;
+            
+            if (!dealerId) {
+                alert('Vui lòng chọn đại lý!');
+                return false;
+            }
+            
+            // Notes không cần validate vì không bắt buộc
+            return true;
+        }
+    </script>
+}

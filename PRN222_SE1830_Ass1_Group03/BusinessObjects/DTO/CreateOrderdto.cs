@@ -19,6 +19,6 @@ namespace BusinessObjects.DTO
         [Required]
         public Guid VehicleId { get; set; }
 
-        public string Notes { get; set; }
+        public string Notes { get; set; } = string.Empty;
     }
 }
