@@ -28,7 +28,7 @@ namespace Group03_MVC.Attributes
             // Check if user has required role
             if (string.IsNullOrEmpty(userRole) || !_allowedRoles.Contains(userRole))
             {
-                context.Result = new ForbidResult();
+                context.Result = new RedirectToActionResult("Forbidden", "Home", null);
                 return;
             }
 

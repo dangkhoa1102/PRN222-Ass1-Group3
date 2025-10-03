@@ -1,6 +1,11 @@
 using BusinessObjects.DTO;
 using BusinessObjects.Models;
 using DataAccessLayer.Repositories;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 
 namespace Services.Service
 {
@@ -29,195 +34,122 @@ namespace Services.Service
             _orderRepository = orderRepository;
             _vehicleRepository = vehicleRepository;
             _dealerRepository = dealerRepository;
-
         }
 
         public async Task<List<OrderDTO>> GetAllOrders()
         {
-            var orders = await _orderRepository.GetAll();
-
-            return orders.Select(o => new OrderDTO
-            {
-                Id = o.Id,
-                OrderNumber = o.OrderNumber,
-                CustomerId = o.CustomerId,
-                CustomerName = o.Customer?.FullName,
-                DealerId = o.DealerId,
-                DealerName = o.Dealer?.Name,
-                VehicleId = o.VehicleId,
-                VehicleName = o.Vehicle?.Name,
-                TotalAmount = o.TotalAmount,
-                Status = o.Status,
-                PaymentStatus = o.PaymentStatus,
-                Notes = o.Notes,
-                CreatedAt = o.CreatedAt,
-                UpdatedAt = o.UpdatedAt
-            }).ToList();
+            // Lấy tất cả đơn hàng dạng DTO
+            return await _orderRepository.GetAllOrdersAsync();
         }
-
 
         public async Task<List<OrderDTO>> GetByStatus(string status)
         {
-            var orders = await _orderRepository.GetByStatus(status);
-
-            return orders.Select(o => new OrderDTO
-            {
-                Id = o.Id,
-                OrderNumber = o.OrderNumber,
-                CustomerId = o.CustomerId,
-                CustomerName = o.Customer?.FullName,
-                DealerId = o.DealerId,
-                DealerName = o.Dealer?.Name,
-                VehicleId = o.VehicleId,
-                VehicleName = o.Vehicle?.Name,
-                TotalAmount = o.TotalAmount,
-                Status = o.Status,
-                PaymentStatus = o.PaymentStatus,
-                Notes = o.Notes,
-                CreatedAt = o.CreatedAt ?? DateTime.MinValue,
-                UpdatedAt = o.UpdatedAt ?? DateTime.MinValue
-            }).ToList();
+            var orders = await _orderRepository.GetAllOrdersAsync();
+            return orders.Where(o => o.Status.Equals(status, StringComparison.OrdinalIgnoreCase)).ToList();
         }
-
 
         public async Task<List<OrderDTO>> GetCustomerOrders(Guid customerId)
         {
-            var orders = await _orderRepository.GetByCustomerId(customerId);
-
-            return orders.Select(o => new OrderDTO
-            {
-                Id = o.Id,
-                OrderNumber = o.OrderNumber,
-                CustomerId = o.CustomerId,
-                CustomerName = o.Customer?.FullName,
-                DealerId = o.DealerId,
-                DealerName = o.Dealer?.Name,
-                VehicleId = o.VehicleId,
-                VehicleName = o.Vehicle?.Name,
-                TotalAmount = o.TotalAmount,
-                Status = o.Status,
-                PaymentStatus = o.PaymentStatus,
-                Notes = o.Notes,
-                CreatedAt = o.CreatedAt,
-                UpdatedAt = o.UpdatedAt
-            }).ToList();
+            // Lấy tất cả đơn hàng rồi lọc theo customerId
+            var orders = await _orderRepository.GetAllOrdersAsync();
+            return orders.Where(o => o.CustomerId == customerId).ToList();
         }
 
         public async Task<OrderDTO?> GetOrderById(Guid id)
         {
-            var order = await _orderRepository.GetById(id);
-
-            if (order == null) return null;
-
-            return new OrderDTO
-            {
-                Id = order.Id,
-                OrderNumber = order.OrderNumber,
-                CustomerId = order.CustomerId,
-                CustomerName = order.Customer?.FullName,
-                DealerId = order.DealerId,
-                DealerName = order.Dealer?.Name,
-                VehicleId = order.VehicleId,
-                VehicleName = order.Vehicle?.Name,
-                TotalAmount = order.TotalAmount,
-                Status = order.Status,
-                PaymentStatus = order.PaymentStatus,
-                Notes = order.Notes,
-                CreatedAt = order.CreatedAt,
-                UpdatedAt = order.UpdatedAt
-            };
+            return await _orderRepository.GetOrderByIdAsync(id);
         }
-
 
         public async Task<bool> CreateOrder(CreateOrderDTO dto)
         {
-
+            // Validate vehicle
             var vehicle = await _vehicleRepository.GetById(dto.VehicleId);
             if (vehicle == null || vehicle.StockQuantity == null || vehicle.StockQuantity <= 0)
                 return false;
 
-
-            var dealers = await _dealerRepository.GetAll();
-            if (dealers == null || !dealers.Any())
+            // Validate dealer
+            var dealer = await _dealerRepository.GetById(dto.DealerId);
+            if (dealer == null)
                 return false;
 
-            var dealerId = dealers.First().Id;
-
-            // Tạo đơn hàng mới
-            var order = new Order
+            // Tạo request
+            var req = new CreateOrderRequest
             {
-                Id = Guid.NewGuid(),
-                OrderNumber = GenerateOrderNumber(),
+                DealerId = dto.DealerId,
                 CustomerId = dto.CustomerId,
-                DealerId = dealerId,
                 VehicleId = dto.VehicleId,
                 TotalAmount = vehicle.Price,
-                Status = "Processing",
-                PaymentStatus = "Unpaid",
-                Notes = string.IsNullOrWhiteSpace(dto.Notes) ? null : dto.Notes,
-                CreatedAt = DateTime.Now,
-                UpdatedAt = DateTime.Now
+                Notes = dto.Notes
             };
 
-            var success = await _orderRepository.Add(order);
-            if (success)
+            // Tạo order (giả sử userId là customerId, bạn có thể sửa lại nếu cần)
+            var orderId = await _orderRepository.CreateOrderAsync(req, dto.DealerId, dto.CustomerId);
+
+            if (orderId != Guid.Empty)
             {
-                await _orderRepository.AddOrderHistory(order.Id, "Processing", "Đơn hàng được tạo", dto.CustomerId);
                 vehicle.StockQuantity -= 1;
                 await _vehicleRepository.UpdateAsync(vehicle);
+                return true;
             }
-
-            return success;
+            return false;
         }
 
         public async Task<bool> ConfirmOrder(Guid orderId, Guid staffId)
         {
-            var order = await _orderRepository.GetById(orderId);
-            if (order == null || order.Status != "Processing")
+            // Lấy order
+            var order = await _orderRepository.GetOrderByIdAsync(orderId);
+            if (order == null || !order.Status.Equals("Processing", StringComparison.OrdinalIgnoreCase))
                 return false;
 
-            order.Status = "Completed";
-            order.UpdatedAt = DateTime.UtcNow;
-
-            var success = await _orderRepository.Update(order);
-            if (success)
-                await _orderRepository.AddOrderHistory(orderId, "Completed", "Đơn hàng được xác nhận và hoàn tất bởi nhân viên", staffId);
-
-            return success;
+            // Update order
+            var req = new UpdateOrderRequest
+            {
+                Id = orderId,
+                VehicleId = order.VehicleId,
+                TotalAmount = order.TotalAmount,
+                Status = "Completed",
+                PaymentStatus = order.PaymentStatus,
+                Notes = order.Notes
+            };
+            return await _orderRepository.UpdateOrderAsync(req, staffId);
         }
 
         public async Task<bool> RejectOrder(Guid orderId, Guid customerId)
         {
-            var order = await _orderRepository.GetById(orderId);
-            if (order == null) return false;
-
-            if (!order.Status.Equals("Processing", StringComparison.OrdinalIgnoreCase))
+            var order = await _orderRepository.GetOrderByIdAsync(orderId);
+            if (order == null || !order.Status.Equals("Processing", StringComparison.OrdinalIgnoreCase))
                 return false;
 
-            order.Status = "Rejected";
-            order.UpdatedAt = DateTime.UtcNow;
-
-            var success = await _orderRepository.Update(order);
-            if (success)
-                await _orderRepository.AddOrderHistory(order.Id, "Rejected", "Khách hàng từ chối đơn hàng", customerId);
-
-            return success;
+            var req = new UpdateOrderRequest
+            {
+                Id = orderId,
+                VehicleId = order.VehicleId,
+                TotalAmount = order.TotalAmount,
+                Status = "Rejected",
+                PaymentStatus = order.PaymentStatus,
+                Notes = "Khách hàng từ chối đơn hàng"
+            };
+            return await _orderRepository.UpdateOrderAsync(req, customerId);
         }
 
         public async Task<bool> CompletePayment(Guid orderId, Guid customerId)
         {
-            var order = await _orderRepository.GetById(orderId);
-            if (order == null) return false;
-
-            if (!order.Status.Equals("Processing", StringComparison.OrdinalIgnoreCase))
+            var order = await _orderRepository.GetOrderByIdAsync(orderId);
+            if (order == null || !order.Status.Equals("Processing", StringComparison.OrdinalIgnoreCase))
                 return false;
 
-            order.Status = "Completed";
-            order.PaymentStatus = "Paid";
-            order.UpdatedAt = DateTime.UtcNow;
+            var req = new UpdateOrderRequest
+            {
+                Id = orderId,
+                VehicleId = order.VehicleId,
+                TotalAmount = order.TotalAmount,
+                Status = "Completed",
+                PaymentStatus = "Paid",
+                Notes = order.Notes
+            };
+            var result = await _orderRepository.UpdateOrderAsync(req, customerId);
 
-            var success = await _orderRepository.Update(order);
-            if (success)
+            if (result)
             {
                 var vehicle = await _vehicleRepository.GetById(order.VehicleId);
                 if (vehicle != null && vehicle.StockQuantity.HasValue)
@@ -225,33 +157,30 @@ namespace Services.Service
                     vehicle.StockQuantity -= 1;
                     await _vehicleRepository.UpdateAsync(vehicle);
                 }
-
-                await _orderRepository.AddOrderHistory(orderId, "Completed", "Khách hàng đã thanh toán", customerId);
             }
-
-            return success;
+            return result;
         }
 
         public async Task<bool> UpdateOrder(OrderDTO dto)
         {
-            var order = await _orderRepository.GetById(dto.Id);
-            if (order == null) return false;
-
-            order.Status = dto.Status;
-            order.TotalAmount = dto.TotalAmount;
-            order.UpdatedAt = DateTime.UtcNow;
-
-            return await _orderRepository.Update(order);
+            var req = new UpdateOrderRequest
+            {
+                Id = dto.Id,
+                VehicleId = dto.VehicleId,
+                TotalAmount = dto.TotalAmount,
+                Status = dto.Status,
+                PaymentStatus = dto.PaymentStatus,
+                Notes = dto.Notes
+            };
+            // Giả sử updatedByUserId là null hoặc lấy từ context
+            return await _orderRepository.UpdateOrderAsync(req, Guid.Empty);
         }
 
         public async Task<bool> DeleteOrder(Guid id)
         {
-            return await _orderRepository.Delete(id);
-        }
-
-        private string GenerateOrderNumber()
-        {
-            return $"ORD-{DateTime.UtcNow:yyyyMMdd}-{DateTime.UtcNow.Ticks.ToString().Substring(10)}";
+            // Soft delete
+            return await _orderRepository.SoftDeleteOrderAsync(id, Guid.Empty);
         }
     }
+
 }
