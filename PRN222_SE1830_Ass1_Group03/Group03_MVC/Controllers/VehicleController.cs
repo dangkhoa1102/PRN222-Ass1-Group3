@@ -503,62 +503,53 @@ namespace Group03_MVC.Controllers
         private async Task<List<string>> UploadImages(List<IFormFile> imageFiles)
         {
             var imageUrls = new List<string>();
+            
+            // Bước 1: Xác định thư mục lưu trữ
             var uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "images", "vehicles");
+            // Ví dụ: D:\Project\wwwroot\images\vehicles
             
-            Console.WriteLine($"Upload folder: {uploadsFolder}");
-            Console.WriteLine($"Files to upload: {imageFiles?.Count ?? 0}");
-            
+            // Bước 2: Tạo thư mục nếu chưa tồn tại
             if (!Directory.Exists(uploadsFolder))
             {
                 Directory.CreateDirectory(uploadsFolder);
-                Console.WriteLine("Created upload directory");
             }
 
-            if (imageFiles == null || imageFiles.Count == 0)
-            {
-                Console.WriteLine("No files to upload");
-                return imageUrls;
-            }
-
+            // Bước 3: Xử lý từng file ảnh
             foreach (var file in imageFiles)
             {
                 if (file != null && file.Length > 0)
                 {
-                    Console.WriteLine($"Processing file: {file.FileName}, Size: {file.Length}");
-                    
+                    // Bước 3a: Kiểm tra định dạng file
                     var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif", ".webp" };
                     var fileExtension = Path.GetExtension(file.FileName).ToLowerInvariant();
                     
                     if (!allowedExtensions.Contains(fileExtension))
                     {
-                        Console.WriteLine($"Skipping file with invalid extension: {fileExtension}");
-                        continue;
+                        continue; // Bỏ qua file không hợp lệ
                     }
 
+                    // Bước 3b: Tạo tên file unique bằng GUID
                     var fileName = Guid.NewGuid().ToString() + fileExtension;
+                    // Ví dụ: "a1b2c3d4-e5f6-7890-abcd-ef1234567890.jpg"
+                    
+                    // Bước 3c: Đường dẫn đầy đủ để lưu file
                     var filePath = Path.Combine(uploadsFolder, fileName);
+                    // Ví dụ: D:\Project\wwwroot\images\vehicles\a1b2c3d4-e5f6-7890-abcd-ef1234567890.jpg
 
-                    try
+                    // Bước 3d: Lưu file vào server
+                    using (var stream = new FileStream(filePath, FileMode.Create))
                     {
-                        using (var stream = new FileStream(filePath, FileMode.Create))
-                        {
-                            await file.CopyToAsync(stream);
-                        }
+                        await file.CopyToAsync(stream);
+                    }
 
-                        var imageUrl = $"/images/vehicles/{fileName}";
-                        imageUrls.Add(imageUrl);
-                        Console.WriteLine($"Successfully uploaded: {imageUrl}");
-                    }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine($"Error uploading file {file.FileName}: {ex.Message}");
-                        throw;
-                    }
+                    // Bước 3e: Tạo URL để truy cập từ web
+                    var imageUrl = $"/images/vehicles/{fileName}";
+                    // URL này sẽ được lưu vào database
+                    imageUrls.Add(imageUrl);
                 }
             }
 
-            Console.WriteLine($"Total images uploaded: {imageUrls.Count}");
-            return imageUrls;
+            return imageUrls; // Trả về danh sách URL
         }
     }
 }
